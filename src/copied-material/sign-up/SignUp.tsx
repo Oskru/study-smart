@@ -2,7 +2,6 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
-import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
@@ -13,9 +12,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import AppTheme from '../shared-theme/AppTheme';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
-import ColorModeSelect from '../shared-theme/ColorModeSelect';
+import { useAuth } from '../../hooks/use-auth.ts';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -59,18 +56,23 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUp(props: { disableCustomTheme?: boolean }) {
+export default function SignUp() {
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [nameError, setNameError] = React.useState(false);
+  const [lastNameError, setLastNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
+
+  const { register } = useAuth();
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
     const name = document.getElementById('name') as HTMLInputElement;
+    const lastName = document.getElementById('lastname') as HTMLInputElement;
 
     let isValid = true;
 
@@ -101,21 +103,31 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       setNameErrorMessage('');
     }
 
+    if (!lastName.value || lastName.value.length < 1) {
+      setLastNameError(true);
+      setLastNameErrorMessage('Last name is required.');
+      isValid = false;
+    } else {
+      setLastNameError(false);
+      setLastNameErrorMessage('');
+    }
+
     return isValid;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    if (nameError || emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get('name'),
-      lastName: data.get('lastName'),
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const user = {
+      firstname: data.get('name') as string,
+      lastname: data.get('lastname') as string,
+      email: data.get('email') as string,
+      password: data.get('password') as string,
+    };
+
+    if (validateInputs()) {
+      await register(user.firstname, user.lastname, user.email, user.password);
+    }
   };
 
   return (
@@ -135,17 +147,31 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel htmlFor='name'>Full name</FormLabel>
+              <FormLabel htmlFor='name'>First name</FormLabel>
               <TextField
                 autoComplete='name'
                 name='name'
                 required
                 fullWidth
                 id='name'
-                placeholder='Jon Snow'
+                placeholder='John'
                 error={nameError}
                 helperText={nameErrorMessage}
                 color={nameError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel htmlFor='lastname'>Last name</FormLabel>
+              <TextField
+                autoComplete='lastname'
+                name='lastname'
+                required
+                fullWidth
+                id='lastname'
+                placeholder='Snow'
+                error={nameError}
+                helperText={lastNameErrorMessage}
+                color={lastNameError ? 'error' : 'primary'}
               />
             </FormControl>
             <FormControl>

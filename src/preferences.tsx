@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import AppContainer from './app-container.tsx';
 import Select from '@mui/material/Select';
@@ -14,10 +14,12 @@ import {
   DialogActions,
   Button,
   TextField,
+  Fab,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 
 // Mock data for availability preferences
 const initialPreferences = [
@@ -35,7 +37,6 @@ const initialPreferences = [
     endTime: { hour: 16, minute: 0 },
     student: { firstName: 'Jane', lastName: 'Smith' },
   },
-  // Add more mock data as needed
 ];
 
 // Styled component for each time slot
@@ -54,6 +55,7 @@ function Preferences() {
   const [preferences, setPreferences] = useState(initialPreferences);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [currentPreference, setCurrentPreference] = useState(null);
 
   // Filter preferences based on selected day
@@ -89,6 +91,23 @@ function Preferences() {
     setCurrentPreference(null);
   };
 
+  // Handle add dialog
+  const handleAddOpen = () => {
+    setCurrentPreference({
+      dayOfWeek: '',
+      startTime: { hour: 0, minute: 0 },
+      endTime: { hour: 1, minute: 0 },
+      student: { firstName: 'New', lastName: 'User' },
+    });
+    setAddDialogOpen(true);
+  };
+
+  const handleAddConfirm = () => {
+    setPreferences(prev => [...prev, currentPreference]);
+    setAddDialogOpen(false);
+    setCurrentPreference(null);
+  };
+
   return (
     <AppContainer title='Here you can access your availability preferences'>
       <InputLabel id='day-of-week'>Day of week</InputLabel>
@@ -97,6 +116,7 @@ function Preferences() {
         id='day-of-week-select'
         value={dayOfWeek}
         onChange={e => setDayOfWeek(e.target.value)}
+        fullWidth
       >
         <MenuItem value={'Monday'}>Monday</MenuItem>
         <MenuItem value={'Tuesday'}>Tuesday</MenuItem>
@@ -150,10 +170,38 @@ function Preferences() {
         )}
       </Box>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-        <DialogTitle>Edit Availability</DialogTitle>
+      <Fab
+        color='primary'
+        aria-label='add'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={handleAddOpen}
+      >
+        <AddIcon />
+      </Fab>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={editDialogOpen || addDialogOpen}
+        onClose={() =>
+          editDialogOpen ? setEditDialogOpen(false) : setAddDialogOpen(false)
+        }
+      >
+        <DialogTitle>
+          {editDialogOpen ? 'Edit Availability' : 'Add Availability'}
+        </DialogTitle>
         <DialogContent>
+          <TextField
+            label='Day of Week'
+            value={currentPreference?.dayOfWeek || ''}
+            onChange={e =>
+              setCurrentPreference(prev => ({
+                ...prev,
+                dayOfWeek: e.target.value,
+              }))
+            }
+            fullWidth
+            margin='dense'
+          />
           <TextField
             label='Start Hour'
             type='number'
@@ -188,9 +236,20 @@ function Preferences() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditConfirm} color='primary'>
-            Save
+          <Button
+            onClick={() =>
+              editDialogOpen
+                ? setEditDialogOpen(false)
+                : setAddDialogOpen(false)
+            }
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={editDialogOpen ? handleEditConfirm : handleAddConfirm}
+            color='primary'
+          >
+            {editDialogOpen ? 'Save' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,13 +1,13 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { ProtectedRoute } from './protected-route.tsx';
+import ProtectedRoute from './protected-route.tsx';
 import Home from './home.tsx';
-import SignUp from './copied-material/sign-up/SignUp.tsx';
+import SignUp from '../copied-material/sign-up/SignUp.tsx';
 import Preferences from './preferences.tsx';
-import { useUser } from './hooks/use-user.ts';
+import { useUser } from '../hooks/use-user.ts';
 import Login from './login.tsx';
-import Register from './Register.tsx';
+import Register from './register.tsx';
 
-const Routes = () => {
+export default function Routes() {
   const { token } = useUser();
 
   // Define public routes accessible to all users
@@ -65,6 +65,4 @@ const Routes = () => {
 
   // Provide the router configuration using RouterProvider
   return <RouterProvider router={router} />;
-};
-
-export default Routes;
+}

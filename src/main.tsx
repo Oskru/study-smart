@@ -11,7 +11,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import ColorModeSelect from './copied-material/shared-theme/ColorModeSelect.tsx';
 import { styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
-import Routes from './routes.tsx';
+import Routes from './components/routes.tsx';
 
 const StyledPage = styled(Stack)(() => ({
   padding: '10px',

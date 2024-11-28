@@ -1,7 +1,7 @@
-import { useAuth } from './hooks/use-auth.ts';
+import { useAuth } from '../hooks/use-auth.ts';
 import { Navigate, Outlet } from 'react-router-dom';
 
-export const ProtectedRoute = () => {
+export default function ProtectedRoute() {
   const { token } = useAuth();
 
   // Check if the user is authenticated
@@ -12,4 +12,4 @@ export const ProtectedRoute = () => {
 
   // If authenticated, render the child routes
   return <Outlet />;
-};
+}

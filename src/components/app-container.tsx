@@ -1,10 +1,10 @@
-import SideMenu from './copied-material/dashboard/components/SideMenu.tsx';
+import SideMenu from '../copied-material/dashboard/components/SideMenu.tsx';
 import Box from '@mui/material/Box';
 import * as React from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
-function AppContainer({
+export default function AppContainer({
   title,
   children,
 }: {
@@ -23,5 +23,3 @@ function AppContainer({
     </Box>
   );
 }
-
-export default AppContainer;

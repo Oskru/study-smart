@@ -21,7 +21,11 @@ export const useAuth = () => {
     if (status === 200) {
       addUser(data.token);
       navigate('/');
+    } else {
+      return { error: true };
     }
+
+    return { error: false };
   };
 
   const logout = () => {

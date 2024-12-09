@@ -6,6 +6,9 @@ import Preferences from './preferences.tsx';
 import { useUser } from '../hooks/use-user.ts';
 import Login from './login.tsx';
 import Register from './register.tsx';
+import { isExpired } from 'react-jwt';
+import { Students } from './students.tsx';
+import { Users } from './users.tsx';
 
 export default function Routes() {
   const { token } = useUser();
@@ -40,6 +43,14 @@ export default function Routes() {
           path: '/preferences',
           element: <Preferences />,
         },
+        {
+          path: '/students',
+          element: <Students />,
+        },
+        {
+          path: '/users',
+          element: <Users />,
+        },
       ],
     },
   ];
@@ -59,9 +70,11 @@ export default function Routes() {
   // Combine and conditionally include routes based on authentication status
   const router = createBrowserRouter([
     ...routesForPublic,
-    ...(!token ? routesForNotAuthenticatedOnly : []),
+    ...(!token || isExpired(token) ? routesForNotAuthenticatedOnly : []),
     ...routesForAuthenticatedOnly,
   ]);
+
+  console.log(router);
 
   // Provide the router configuration using RouterProvider
   return <RouterProvider router={router} />;

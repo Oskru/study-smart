@@ -15,6 +15,7 @@ import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/use-auth.ts';
+import { LoadingButton } from '@mui/lab';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -66,6 +67,7 @@ export default function SignIn() {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
 
   const handleClickOpen = () => {
@@ -80,7 +82,16 @@ export default function SignIn() {
     event.preventDefault();
 
     if (validateInputs()) {
-      await login(email, password);
+      setIsLoggingIn(true);
+      await login(email, password)
+        .then(({ error }) => {
+          if (error) {
+            alert('Invalid credentials, try signing in with a different ones');
+          }
+        })
+        .finally(() => {
+          setIsLoggingIn(false);
+        });
     }
   };
 
@@ -175,14 +186,17 @@ export default function SignIn() {
               label='Remember me'
             />
             <ForgotPassword open={open} handleClose={handleClose} />
-            <Button
+            <LoadingButton
+              loading={isLoggingIn}
+              loadingIndicator='Signing in...'
+              color='primary'
               type='submit'
               fullWidth
               variant='contained'
               onClick={validateInputs}
             >
               Sign in
-            </Button>
+            </LoadingButton>
             <Link
               component='button'
               type='button'

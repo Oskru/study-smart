@@ -7,7 +7,7 @@ import {
   TableRow,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { fetchUsers, User } from '../hooks/api/use-users.ts';
+import { fetchUsers, deleteUser, User } from '../hooks/api/use-users.ts';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useUser } from '../hooks/use-user.ts';
@@ -16,7 +16,7 @@ export const Users = () => {
   const [users, setUsers] = useState<User[] | []>([]);
   const { user: currentUser } = useUser();
 
-  const deleteUser = async (id: number) => {
+  const handleDeleteUser = async (id: number) => {
     deleteUser(id)
       .then(() => setUsers(users.filter(student => student.id !== id)))
       .catch(() => alert('Failed to delete student!'));
@@ -50,7 +50,7 @@ export const Users = () => {
               <TableCell>{user.email}</TableCell>
               {currentUser?.userRole === 'ADMIN' ? (
                 <TableCell>
-                  <IconButton onClick={() => deleteUser(user.id)}>
+                  <IconButton onClick={() => handleDeleteUser(user.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>

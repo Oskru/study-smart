@@ -9,6 +9,7 @@ import Register from './register.tsx';
 import { isExpired } from 'react-jwt';
 import { Students } from './students.tsx';
 import { Users } from './users.tsx';
+import { Planner } from './planner.tsx';
 
 export default function Routes() {
   const { token } = useUser();
@@ -51,6 +52,10 @@ export default function Routes() {
           path: '/users',
           element: <Users />,
         },
+        {
+          path: '/planner',
+          element: <Planner />,
+        }
       ],
     },
   ];

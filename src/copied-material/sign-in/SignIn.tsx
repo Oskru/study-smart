@@ -2,7 +2,6 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
-import CssBaseline from '@mui/material/CssBaseline';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
@@ -14,13 +13,9 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
-import { GoogleIcon, FacebookIcon } from './CustomIcons';
-import AppTheme from '../shared-theme/AppTheme';
-import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { authorizedFetch } from '../../utils/authorized-fetch.ts';
-import { LOGIN_URL } from '../../utils/consts/api.ts';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/use-auth.ts';
+import { LoadingButton } from '@mui/lab';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -64,7 +59,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
@@ -72,6 +67,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
 
   const handleClickOpen = () => {
@@ -85,23 +81,18 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const data = new FormData(event.currentTarget);
-    // const response = await authorizedFetch(LOGIN_URL, email, password, {
-    //   method: 'POST',
-    //   body: JSON.stringify({ email, password }),
-    // });
-
-    // TODO: delete and uncomment following if when backend works
-    login({ email: 'admin' });
-
-    // if (response.ok) {
-    //   login({ email });
-    // }
-
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    if (validateInputs()) {
+      setIsLoggingIn(true);
+      await login(email, password)
+        .then(({ error }) => {
+          if (error) {
+            alert('Invalid credentials, try signing in with a different ones');
+          }
+        })
+        .finally(() => {
+          setIsLoggingIn(false);
+        });
+    }
   };
 
   const validateInputs = () => {
@@ -110,23 +101,23 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     let isValid = true;
 
-    // if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-    //   setEmailError(true);
-    //   setEmailErrorMessage('Please enter a valid email address.');
-    //   isValid = false;
-    // } else {
-    //   setEmailError(false);
-    //   setEmailErrorMessage('');
-    // }
+    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+      setEmailError(true);
+      setEmailErrorMessage('Please enter a valid email address.');
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage('');
+    }
 
-    // if (!password.value || password.value.length < 6) {
-    //   setPasswordError(true);
-    //   setPasswordErrorMessage('Password must be at least 6 characters long.');
-    //   isValid = false;
-    // } else {
-    //   setPasswordError(false);
-    //   setPasswordErrorMessage('');
-    // }
+    if (!password.value || password.value.length < 6) {
+      setPasswordError(true);
+      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage('');
+    }
 
     return isValid;
   };
@@ -184,7 +175,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 type='password'
                 id='password'
                 autoComplete='current-password'
-                autoFocus
                 required
                 fullWidth
                 variant='outlined'
@@ -196,14 +186,17 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               label='Remember me'
             />
             <ForgotPassword open={open} handleClose={handleClose} />
-            <Button
+            <LoadingButton
+              loading={isLoggingIn}
+              loadingIndicator='Signing in...'
+              color='primary'
               type='submit'
               fullWidth
               variant='contained'
               onClick={validateInputs}
             >
               Sign in
-            </Button>
+            </LoadingButton>
             <Link
               component='button'
               type='button'

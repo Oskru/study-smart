@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
@@ -6,10 +5,10 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
-import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
+import { useUser } from '../../../hooks/use-user.ts';
+import { useEffect, useState } from 'react';
 
 const drawerWidth = 240;
 
@@ -24,7 +23,24 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
+function capitalizeFirstLetter(val: string) {
+  return (
+    String(val).charAt(0).toUpperCase() + String(val).slice(1).toLowerCase()
+  );
+}
+
 export default function SideMenu() {
+  const { user } = useUser();
+  const [userAvatarUrl, setUserAvatarUrl] = useState(
+    `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}`
+  );
+
+  useEffect(() => {
+    setUserAvatarUrl(
+      `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}`
+    );
+  }, [user]);
+
   return (
     <Drawer
       variant='permanent'
@@ -49,8 +65,8 @@ export default function SideMenu() {
       >
         <Avatar
           sizes='small'
-          alt='Riley Carter'
-          src='/static/images/avatar/7.jpg'
+          alt={user?.firstName + ' ' + user?.lastName}
+          src={userAvatarUrl}
           sx={{ width: 36, height: 36 }}
         />
         <Box sx={{ mr: 'auto' }}>
@@ -58,10 +74,10 @@ export default function SideMenu() {
             variant='body2'
             sx={{ fontWeight: 500, lineHeight: '16px' }}
           >
-            System Admin
+            {user?.firstName} {user?.lastName}
           </Typography>
           <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-            admin
+            {capitalizeFirstLetter(user?.userRole ?? 'User')}
           </Typography>
         </Box>
         <OptionsMenu />

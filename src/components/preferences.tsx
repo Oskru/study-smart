@@ -30,6 +30,7 @@ import {
 } from '../hooks/api/use-get-preferences.ts';
 import { useUser } from '../hooks/use-user.ts';
 import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
+import { ReactWeekTimeRangePicker, SelectedDataProps } from '@marinos33/react-week-time-range-picker';
 
 // Styled component for each time slot
 const TimeSlot = styled(Paper)(({ theme }) => ({
@@ -111,8 +112,13 @@ function Preferences() {
       });
   };
 
+  const handleSelectTimeRange = (selectedData: SelectedDataProps[]) => {
+    console.log(selectedData)
+  }
+
   return (
     <AppContainer title='Preferences Management'>
+      <ReactWeekTimeRangePicker hasHalfHour={true} selectTimeRange={handleSelectTimeRange} />
       <InputLabel id='day-of-week'>Day of week</InputLabel>
       <Select
         labelId='day-of-week'

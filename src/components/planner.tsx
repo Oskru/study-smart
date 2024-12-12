@@ -1,5 +1,11 @@
 import AppContainer from './app-container.tsx';
 import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fab,
   InputLabel,
   MenuItem,
   Select,
@@ -8,10 +14,13 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TextField,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { fetchUsers, deleteUser, User } from '../hooks/api/use-users.ts';
 import IconButton from '@mui/material/IconButton';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useUser } from '../hooks/use-user.ts';
 import styled from '@emotion/styled';
@@ -22,7 +31,15 @@ import {
   Preference,
   Preferences as PreferencesType,
 } from '../hooks/api/use-get-preferences.ts';
-import { fetchGroupById, fetchGroups, Group } from '../hooks/api/use-groups.ts';
+import {
+  deleteGroup,
+  editGroup,
+  fetchGroupById,
+  fetchGroups,
+  Group,
+  Groups,
+  postGroup,
+} from '../hooks/api/use-groups.ts';
 import * as moment from 'moment';
 import { fetchStudentsByIds, Student } from '../hooks/api/use-students.ts';
 
@@ -97,22 +114,63 @@ export const Planner = () => {
   const [votes, setVotes] = useState<Votes>({});
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
-  const [groups, setGroups] = useState<Group[] | []>([]);
-  const [currentGroup, setCurrentGroup] = useState<Group['id'] | null>(null);
-  const [users, setUsers] = useState<User[] | []>([]);
   const { user: currentUser } = useUser();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [groups, setGroups] = useState<Groups>([]);
+  const [currentGroup, setCurrentGroup] = useState<Group['id'] | null>(null);
 
-  useEffect(() => {
-    fetchCourses().then(data => {
-      setCourses(data);
-      setCurrentCourse(data[0].id);
+  const handleEditOpen = async (id: number) => {
+    try {
+      const data = await fetchGroupById(id);
+
+      setCurrentGroup({
+        name: data ? data.name : 'Coś nie poszło',
+        studentIdList: data ? data.studentIdList : [],
+      });
+
+      setEditDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
+    } catch (error) {
+      alert('Failed to fetch group data!');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteGroup = async (id: number) => {
+    deleteGroup(id)
+      .then(() => setGroups(groups.filter(group => group.id !== id)))
+      .catch(() => alert('Failed to delete group!'));
+  };
+
+  const handleAddOpen = () => {
+    setCurrentGroup({
+      name: '',
+      studentIdList: [],
     });
-    fetchGroups().then(data => {
-      setGroups(data);
-      setCurrentGroup(data[0].id);
-    });
-    fetchUsers().then(data => setUsers(data));
-  }, []);
+    setAddDialogOpen(true);
+  };
+
+  const handleAddConfirm = () => {
+    setAddDialogOpen(false);
+    postGroup(currentGroup as Group)
+      .then(() => {
+        setGroups(prev => [...prev, currentGroup]);
+      })
+      .catch(error => {
+        alert(`Error while posting preference: ${error}`);
+      });
+  };
+
+  const handleEditConfirm = async (id: number) => {
+    setAddDialogOpen(false);
+    editGroup(id, currentGroup as Group)
+      .then(() => {
+        setGroups(prev => [...prev, currentGroup]);
+      })
+      .catch(error => {
+        alert(`Error while posting preference: ${error}`);
+      });
+  };
 
   const addVote = (day: string, hour: string): void => {
     const key = `${day}-${hour}`;
@@ -160,11 +218,17 @@ export const Planner = () => {
     });
   };
 
-  const handleDeleteUser = async (id: number) => {
-    deleteUser(id)
-      .then(() => setUsers(users.filter(student => student.id !== id)))
-      .catch(() => alert('Failed to delete student!'));
-  };
+  useEffect(() => {
+    fetchCourses().then(data => {
+      setCourses(data);
+      setCurrentCourse(data[0].id);
+    });
+    fetchGroups().then(data => {
+      setGroups(data);
+      setCurrentGroup(data[0].id);
+    });
+    fetchUsers().then(data => setUsers(data));
+  }, []);
 
   return (
     <AppContainer title='View your users'>
@@ -172,12 +236,14 @@ export const Planner = () => {
       <Select
         labelId='group'
         id='group-select'
-        value={currentGroup}
+        value={currentGroup || ''}
         onChange={async e => {
-          setCurrentGroup(e.target.value as Group['id']);
-          await handleGetPreferencesFromGroup(
-            await fetchGroupById(currentGroup || 0)
-          );
+          const selectedId = Number(e.target.value); // Pobierz ID jako liczbę
+          setCurrentGroup(selectedId); // Ustaw nowe ID
+          const group = groups.find(g => g.id === selectedId); // Pobierz pełny obiekt grupy
+          if (group) {
+            await handleGetPreferencesFromGroup(group); // Wywołaj funkcję z grupą
+          }
         }}
         fullWidth
       >
@@ -187,6 +253,7 @@ export const Planner = () => {
           </MenuItem>
         ))}
       </Select>
+
       <InputLabel id='course'>Course</InputLabel>
       <Select
         labelId='course'
@@ -202,29 +269,102 @@ export const Planner = () => {
         ))}
       </Select>
       <PreferenceTable />
+      <Fab
+        color='primary'
+        aria-label='add'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={handleAddOpen}
+      >
+        <AddIcon />
+      </Fab>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={editDialogOpen || addDialogOpen}
+        onClose={() =>
+          editDialogOpen ? setEditDialogOpen(false) : setAddDialogOpen(false)
+        }
+      >
+        <DialogTitle>
+          {editDialogOpen ? 'Edit Preference' : 'Add Preference'}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label='Name'
+            value={
+              currentGroup
+                ? groups.find(g => g.id === currentGroup)?.name || ''
+                : ''
+            }
+            onChange={e =>
+              setCurrentGroup(prev => ({
+                ...prev,
+                name: e.target.value,
+              }))
+            }
+            fullWidth
+            margin='dense'
+          />
+          <TextField
+            label='Student Id List'
+            value={currentGroup ? currentGroup.studentIdList : ''}
+            onChange={e =>
+              setCurrentGroup(prev => ({
+                ...prev,
+                studentIdList: e.target.value,
+              }))
+            }
+            fullWidth
+            margin='dense'
+          />
+          {/* Additional fields for role-specific data can be added here */}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              editDialogOpen
+                ? setEditDialogOpen(false)
+                : setAddDialogOpen(false)
+            }
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleAddConfirm} color='primary'>
+            {editDialogOpen ? 'Save' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/*Group List*/}
       <Table sx={{ minWidth: 650 }}>
         <TableHead>
           <TableRow>
-            <TableCell>First name</TableCell>
-            <TableCell>Last name</TableCell>
-            <TableCell>Email</TableCell>
+            <TableCell>Group ID</TableCell>
+            <TableCell>Group Name</TableCell>
+            <TableCell>List of Students</TableCell>
             {currentUser?.userRole === 'ADMIN' ? (
               <TableCell>Options</TableCell>
             ) : null}
           </TableRow>
         </TableHead>
         <TableBody>
-          {users.map(user => (
+          {groups.map((group: Group) => (
             <TableRow
-              key={user.id}
+              key={group.id}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
-              <TableCell>{user.firstName}</TableCell>
-              <TableCell>{user.lastName}</TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell>{group.id}</TableCell>
+              <TableCell>{group.name}</TableCell>
+              <TableCell>{group.studentIdList}</TableCell>
               {currentUser?.userRole === 'ADMIN' ? (
                 <TableCell>
-                  <IconButton onClick={() => handleDeleteUser(user.id)}>
+                  <IconButton onClick={() => handleEditOpen(group.id)}>
+                    <EditIcon />
+                  </IconButton>
+                </TableCell>
+              ) : null}
+              {currentUser?.userRole === 'ADMIN' ? (
+                <TableCell>
+                  <IconButton onClick={() => handleDeleteGroup(group.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>

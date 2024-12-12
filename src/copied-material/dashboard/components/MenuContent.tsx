@@ -19,6 +19,7 @@ const mainListItems = [
   { text: 'Students', icon: <PeopleRoundedIcon />, url: '/students' },
   { text: 'Users', icon: <PeopleRoundedIcon />, url: '/users' },
   { text: 'Planner', icon: <PeopleRoundedIcon />, url: '/planner' },
+  { text: 'Admin Panel', icon: <PeopleRoundedIcon />, url: '/admin-panel' },
 ];
 
 const secondaryListItems = [

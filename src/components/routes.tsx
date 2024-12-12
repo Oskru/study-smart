@@ -10,6 +10,7 @@ import { isExpired } from 'react-jwt';
 import { Students } from './students.tsx';
 import { Users } from './users.tsx';
 import { Planner } from './planner.tsx';
+import { Admin } from './admin-panel.tsx';
 
 export default function Routes() {
   const { token } = useUser();
@@ -55,7 +56,11 @@ export default function Routes() {
         {
           path: '/planner',
           element: <Planner />,
-        }
+        },
+        {
+          path: '/admin-panel',
+          element: <Admin />,
+        },
       ],
     },
   ];

@@ -3,6 +3,10 @@ import { apiInstance } from '../../utils/api-instance.ts';
 import { STUDENTS_URL } from '../../utils/consts/api.ts';
 
 const studentSchema = z.object({
+  id: z.number(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
   indexNumber: z.string(),
   major: z.string(),
   groupId: z.number(),
@@ -20,10 +24,8 @@ export const fetchStudents = async (): Promise<Student[] | []> => {
 export const fetchStudentsByIds = async (
   studentIds: number[]
 ): Promise<Student[]> => {
-  const response = await apiInstance.post<Student[]>(`${STUDENTS_URL}/bulk`, {
-    ids: studentIds,
-  });
-  return response.data;
+  const students = await fetchStudents();
+  return students.filter(student => studentIds.includes(student.id));
 };
 
 export const deleteStudent = async (id: number) => {

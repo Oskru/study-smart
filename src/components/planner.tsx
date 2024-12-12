@@ -17,7 +17,6 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { fetchUsers, deleteUser, User } from '../hooks/api/use-users.ts';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -26,10 +25,8 @@ import { useUser } from '../hooks/use-user.ts';
 import styled from '@emotion/styled';
 import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
 import {
-  fetchPreferences,
   fetchPreferencesByIds,
   Preference,
-  Preferences as PreferencesType,
 } from '../hooks/api/use-get-preferences.ts';
 import {
   deleteGroup,
@@ -118,17 +115,25 @@ export const Planner = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [groups, setGroups] = useState<Groups>([]);
-  const [currentGroup, setCurrentGroup] = useState<Group['id'] | null>(null);
+  const [editedGroups, setEditedGroups] = useState<Groups>([]);
+  const [currentGroup, setCurrentGroup] = useState<Omit<Group, 'id'> | null>(
+    null
+  );
+  const [currentGroupId, setCurrentGroupId] = useState<Group['id'] | null>(
+    null
+  );
 
   const handleEditOpen = async (id: number) => {
     try {
-      const data = await fetchGroupById(id);
+      setEditedGroups(groups);
+      setCurrentGroupId(id);
+      const data = await fetchGroupById(currentGroupId ? currentGroupId : 1);
 
       setCurrentGroup({
         name: data ? data.name : 'Coś nie poszło',
         studentIdList: data ? data.studentIdList : [],
       });
-
+      console.log(currentGroupId);
       setEditDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
     } catch (error) {
       alert('Failed to fetch group data!');
@@ -152,6 +157,7 @@ export const Planner = () => {
 
   const handleAddConfirm = () => {
     setAddDialogOpen(false);
+    console.log(currentGroup);
     postGroup(currentGroup as Group)
       .then(() => {
         setGroups(prev => [...prev, currentGroup]);
@@ -165,7 +171,8 @@ export const Planner = () => {
     setAddDialogOpen(false);
     editGroup(id, currentGroup as Group)
       .then(() => {
-        setGroups(prev => [...prev, currentGroup]);
+        setEditedGroups(prev => [...prev, currentGroup]);
+        setGroups(editedGroups);
       })
       .catch(error => {
         alert(`Error while posting preference: ${error}`);
@@ -225,9 +232,12 @@ export const Planner = () => {
     });
     fetchGroups().then(data => {
       setGroups(data);
-      setCurrentGroup(data[0].id);
+      setCurrentGroupId(data[0].id);
+      setCurrentGroup({
+        name: '',
+        studentIdList: [],
+      });
     });
-    fetchUsers().then(data => setUsers(data));
   }, []);
 
   return (
@@ -239,7 +249,7 @@ export const Planner = () => {
         value={currentGroup || ''}
         onChange={async e => {
           const selectedId = Number(e.target.value); // Pobierz ID jako liczbę
-          setCurrentGroup(selectedId); // Ustaw nowe ID
+          setCurrentGroupId(selectedId); // Ustaw nowe ID
           const group = groups.find(g => g.id === selectedId); // Pobierz pełny obiekt grupy
           if (group) {
             await handleGetPreferencesFromGroup(group); // Wywołaj funkcję z grupą
@@ -268,6 +278,7 @@ export const Planner = () => {
           </MenuItem>
         ))}
       </Select>
+      {renderVotes()}
       <PreferenceTable />
       <Fab
         color='primary'
@@ -285,35 +296,77 @@ export const Planner = () => {
           editDialogOpen ? setEditDialogOpen(false) : setAddDialogOpen(false)
         }
       >
-        <DialogTitle>
-          {editDialogOpen ? 'Edit Preference' : 'Add Preference'}
-        </DialogTitle>
+        <DialogTitle>{editDialogOpen ? 'Edit Group' : 'Add Group'}</DialogTitle>
         <DialogContent>
           <TextField
             label='Name'
-            value={
-              currentGroup
-                ? groups.find(g => g.id === currentGroup)?.name || ''
-                : ''
-            }
-            onChange={e =>
-              setCurrentGroup(prev => ({
-                ...prev,
-                name: e.target.value,
-              }))
-            }
+            value={(() => {
+              if (editDialogOpen) {
+                return currentGroupId
+                  ? editedGroups.find(g => g.id === currentGroupId)?.name ||
+                      'lol'
+                  : 'xd';
+              } else {
+                return currentGroup ? currentGroup.name : '';
+              }
+            })()}
+            onChange={e => {
+              if (editDialogOpen) {
+                setCurrentGroup(prev => ({
+                  ...prev,
+                  name: e.target.value,
+                }));
+                setEditedGroups(prevGroups =>
+                  prevGroups.map(
+                    group =>
+                      group.id === currentGroupId
+                        ? { ...group, name: e.target.value } // Zmodyfikowany element
+                        : group // Pozostaw pozostałe elementy bez zmian
+                  )
+                );
+              } else {
+                setCurrentGroup(prev => ({
+                  ...prev,
+                  name: e.target.value,
+                }));
+              }
+            }}
             fullWidth
             margin='dense'
           />
           <TextField
             label='Student Id List'
-            value={currentGroup ? currentGroup.studentIdList : ''}
-            onChange={e =>
-              setCurrentGroup(prev => ({
-                ...prev,
-                studentIdList: e.target.value,
-              }))
-            }
+            value={(() => {
+              if (editDialogOpen) {
+                return currentGroupId
+                  ? editedGroups.find(g => g.id === currentGroupId)
+                      ?.studentIdList || 'lol'
+                  : 'xd';
+              } else {
+                return currentGroup ? currentGroup.studentIdList : '';
+              }
+            })()}
+            onChange={e => {
+              if (editDialogOpen) {
+                setCurrentGroup(prev => ({
+                  ...prev,
+                  studentIdList: e.target.value,
+                }));
+                setEditedGroups(prevGroups =>
+                  prevGroups.map(
+                    group =>
+                      group.id === currentGroupId
+                        ? { ...group, studentIdList: e.target.value } // Zmodyfikowany element
+                        : group // Pozostaw pozostałe elementy bez zmian
+                  )
+                );
+              } else {
+                setCurrentGroup(prev => ({
+                  ...prev,
+                  studentIdList: e.target.value,
+                }));
+              }
+            }}
             fullWidth
             margin='dense'
           />
@@ -329,7 +382,14 @@ export const Planner = () => {
           >
             Cancel
           </Button>
-          <Button onClick={handleAddConfirm} color='primary'>
+          <Button
+            onClick={() =>
+              editDialogOpen
+                ? handleEditConfirm(currentGroupId)
+                : handleAddConfirm()
+            }
+            color='primary'
+          >
             {editDialogOpen ? 'Save' : 'Add'}
           </Button>
         </DialogActions>

@@ -17,6 +17,15 @@ export const fetchStudents = async (): Promise<Student[] | []> => {
   return response.data;
 };
 
+export const fetchStudentsByIds = async (
+  studentIds: number[]
+): Promise<Student[]> => {
+  const response = await apiInstance.post<Student[]>(`${STUDENTS_URL}/bulk`, {
+    ids: studentIds,
+  });
+  return response.data;
+};
+
 export const deleteStudent = async (id: number) => {
   await apiInstance.delete<Student[] | []>(`${STUDENTS_URL}/${id}`);
 };

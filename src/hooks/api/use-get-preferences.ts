@@ -48,6 +48,18 @@ export const postPreference = async (preference: Omit<Preference, 'id'>) => {
   );
 };
 
+export const fetchPreferencesByIds = async (
+  preferenceIds: number[]
+): Promise<Preference[]> => {
+  const response = await apiInstance.post<Preference[]>(
+    `${PREFERENCES_URL}/bulk`,
+    {
+      ids: preferenceIds,
+    }
+  );
+  return response.data;
+};
+
 export const deletePreference = async (id: number) => {
   await apiInstance.delete<Preferences>(`PREFERENCES_URL/${id}`);
 };

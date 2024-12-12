@@ -8,28 +8,37 @@ const groupSchema = z.object({
   studentIdList: z.array(z.number()),
 });
 
-export type Group = z.infer<typeof groupSchema>;
+const groupsSchema = z.union([z.array(groupSchema), z.array(z.any())]);
 
-export const fetchGroups = async (): Promise<Group[] | []> => {
-  const response = await apiInstance.get<Group[] | []>(GROUPS_URL);
+export type Group = z.infer<typeof groupSchema>;
+export type Groups = z.infer<typeof groupsSchema>;
+
+export const fetchGroups = async (): Promise<Groups> => {
+  const response = await apiInstance.get<Groups>(GROUPS_URL);
 
   return response.data;
 };
 
-export const fetchGroupById = async (groupId: number): Promise<Group> => {
-  const response = await apiInstance.post<Group>(`${GROUPS_URL}/bulk`, {
-    ids: groupId,
-  });
+export const fetchGroupById = async (id: number): Promise<Group> => {
+  const response = await apiInstance.get<Group>(`${GROUPS_URL}/${id}`);
   return response.data;
 };
 
 export const postGroup = async (
   group: Omit<Group, 'id'>
 ): Promise<Group[] | []> => {
-  const response = await apiInstance.post<Group[] | []>(
-    GROUPS_URL,
-    JSON.stringify(group)
-  );
+  const response = await apiInstance.post<Group[] | []>(GROUPS_URL, group);
+  return response.data;
+};
+
+export const editGroup = async (
+  id: number,
+  data: Partial<Group>
+): Promise<Group> => {
+  // Wyślij żądanie do API, np.:
+  const response = await apiInstance.put<Group>(`${GROUPS_URL}/${id}`, {
+    data,
+  });
 
   return response.data;
 };

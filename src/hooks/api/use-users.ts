@@ -18,7 +18,7 @@ export const fetchUsers = async (
   const response = await apiInstance.get<User[] | []>(USERS_URL);
 
   if (onlyStudents) {
-    return response.data.filter(student => student.email.includes('@student'));
+    return response.data.filter(student => student.role == 'STUDENT');
   }
 
   return response.data;

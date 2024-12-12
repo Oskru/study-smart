@@ -157,13 +157,23 @@ export const Planner = () => {
 
   const handleAddConfirm = () => {
     setAddDialogOpen(false);
-    console.log(currentGroup);
-    postGroup(currentGroup as Group)
+    console.log(currentGroup?.studentIdList);
+    const processedStudentIdList = currentGroup?.studentIdList
+      ? currentGroup.studentIdList.toString().split(',').map(Number)
+      : [];
+    const groupToPost = {
+      ...currentGroup,
+      studentIdList: processedStudentIdList, // Ustaw przetworzony studentIdList
+    };
+    console.log(processedStudentIdList);
+
+    postGroup(groupToPost as Group)
       .then(() => {
-        setGroups(prev => [...prev, currentGroup]);
+        // Aktualizacja grup w stanie
+        setGroups(prev => [...prev, groupToPost]);
       })
       .catch(error => {
-        alert(`Error while posting preference: ${error}`);
+        alert(`Error while posting group: ${error}`);
       });
   };
 
@@ -347,6 +357,12 @@ export const Planner = () => {
               }
             })()}
             onChange={e => {
+              const newStudentIdList = e.target.value
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id !== '') // Usuwamy puste elementy
+                .map(Number); // Konwertujemy na liczby
+
               if (editDialogOpen) {
                 setCurrentGroup(prev => ({
                   ...prev,
@@ -356,7 +372,7 @@ export const Planner = () => {
                   prevGroups.map(
                     group =>
                       group.id === currentGroupId
-                        ? { ...group, studentIdList: e.target.value } // Zmodyfikowany element
+                        ? { ...group, studentIdList: newStudentIdList || '' } // Zmodyfikowany element
                         : group // Pozostaw pozostałe elementy bez zmian
                   )
                 );

@@ -3,6 +3,7 @@ import AppContainer from './app-container.tsx';
 import { Box, TextField, Button } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { apiInstance } from '../utils/api-instance.ts';
 
 const AddPlanner = () => {
   const [formData, setFormData] = useState({
@@ -20,8 +21,8 @@ const AddPlanner = () => {
   };
 
   const handleSubmit = () => {
-    axios
-      .post('/api/auth/addPlanner', formData)
+    apiInstance
+      .post('/auth/addPlanner', formData)
       .then(() => {
         alert('Planista został dodany!');
         setFormData({

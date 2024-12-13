@@ -9,6 +9,7 @@ import {
 import { apiInstance } from '../../utils/api-instance.ts';
 import { z } from 'zod';
 import { PREFERENCES_URL } from '../../utils/consts/api.ts';
+import { SelectedDataProps } from '@marinos33/react-week-time-range-picker';
 
 const preferenceSchema = z.object({
   id: z.number(),
@@ -43,6 +44,10 @@ export const fetchPreferences = async (): Promise<Preferences> => {
 
 export const postPreference = async (preference: Omit<Preference, 'id'>) => {
   await apiInstance.post<Preferences>(PREFERENCES_URL, preference);
+};
+
+export const postSelectedData = async (selectedData: SelectedDataProps) => {
+  await apiInstance.post<SelectedDataProps>(PREFERENCES_URL, selectedData);
 };
 
 export const fetchPreferencesByIds = async (

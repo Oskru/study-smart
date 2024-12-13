@@ -42,10 +42,7 @@ export const fetchPreferences = async (): Promise<Preferences> => {
 };
 
 export const postPreference = async (preference: Omit<Preference, 'id'>) => {
-  await apiInstance.post<Preferences>(
-    PREFERENCES_URL,
-    JSON.stringify(preference)
-  );
+  await apiInstance.post<Preferences>(PREFERENCES_URL, preference);
 };
 
 export const fetchPreferencesByIds = async (

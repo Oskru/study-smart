@@ -48,8 +48,27 @@ const StyledTr = styled.tr`
   border: 1px solid lightgray;
 `;
 
-const StyledTd = styled.td`
-  border: 1px solid lightgray;
+// Funkcja do obliczania koloru tła na podstawie liczby głosów
+const getBackgroundColor = (votes: number) => {
+  // Przekształcamy liczbę głosów na wartość od 0 do 1 (możesz dostosować zakres w zależności od maksymalnej liczby głosów)
+  const maxVotes = 8; // Załóżmy, że maksymalna liczba głosów to 10
+  const intensity = Math.min(votes / maxVotes, 1); // Skaluje od 0 do 1
+
+  // Interpolacja między żółtym (rgb(255, 255, 0)) a czerwonym (rgb(255, 0, 0))
+  const r = Math.round(255 * intensity + 255 * (1 - intensity)); // Czerwony
+  const g = Math.round(255 * (1 - intensity)); // Zielony
+  const b = 150; // Brak niebieskiego, zmienia się od żółtego do czerwonego
+
+  return `rgb(${r}, ${g}, ${b})`; // Zwraca kolor RGB
+};
+
+const StyledTd = styled.td<{ votes: number }>`
+  background-color: ${({ votes }) => getBackgroundColor(votes)};
+  color: black;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #ddd;
 `;
 
 const hours = [
@@ -79,33 +98,51 @@ const hours = [
   '23:00',
 ];
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
 
 type Votes = {
   [key: string]: number; // Klucz: "Dzień-Godzina", wartość: liczba głosów
 };
 
-const PreferenceTable = () => {
+interface PreferenceTableProps {
+  votes: { [key: string]: number };
+}
+
+const PreferenceTable: React.FC<PreferenceTableProps> = ({ votes }) => {
+  const renderCell = (day: string, hour: string) => {
+    const key = `${day}-${hour}`;
+    const votesForCell = votes[key] || 0; // Jeśli nie ma głosów, domyślnie 0
+
+    return (
+      <StyledTd key={key} votes={votesForCell}>
+        {votesForCell}
+      </StyledTd>
+    );
+  };
+
   return (
     <table>
-      <StyledTr>
-        <StyledTh>Day</StyledTh>
-        {hours.map(item => (
-          <StyledTh>{item}</StyledTh>
-        ))}
-      </StyledTr>
-      {days.map(item => (
+      <thead>
         <StyledTr>
-          <StyledTd>{item}</StyledTd>
-          {hours.map(() => (
-            //TODO: Dodanie uśrednionych preferencji studentów zamiast siema
-            <StyledTh>siema</StyledTh>
+          <StyledTh>Dzień / Godzina</StyledTh>
+          {hours.map(hour => (
+            <StyledTh key={hour}>{hour}</StyledTh>
           ))}
         </StyledTr>
-      ))}
+      </thead>
+      <tbody>
+        {days.map(day => (
+          <StyledTr key={day}>
+            <td>{day}</td>
+            {hours.map(hour => renderCell(day, hour))}
+          </StyledTr>
+        ))}
+      </tbody>
     </table>
   );
 };
+
+export default PreferenceTable;
 
 export const Planner = () => {
   const [votes, setVotes] = useState<Votes>({});
@@ -315,8 +352,8 @@ export const Planner = () => {
           </MenuItem>
         ))}
       </Select>
-      {renderVotes()}
-      <PreferenceTable />
+      {/* {renderVotes()} */}
+      <PreferenceTable votes={votes} />
       <Fab
         color='primary'
         aria-label='add'

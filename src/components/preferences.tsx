@@ -34,6 +34,7 @@ import {
   ReactWeekTimeRangePicker,
   SelectedDataProps,
 } from '@marinos33/react-week-time-range-picker';
+import { Group } from '../hooks/api/use-groups.ts';
 
 // Styled component for each time slot
 const TimeSlot = styled(Paper)(({ theme }) => ({
@@ -75,7 +76,7 @@ function Preferences() {
   );
 
   // Dialog handlers remain similar with adjustments for dynamic data
-  const handleDeleteOpen = preference => {
+  const handleDeleteOpen = (preference: Omit<Preference, 'id'>) => {
     setCurrentPreference(preference);
     setDeleteDialogOpen(true);
   };
@@ -168,7 +169,7 @@ function Preferences() {
           filteredPreferences.map(preference => (
             <TimeSlot key={preference.id} elevation={3}>
               <Typography variant='body1'>
-                {`${preference.startTime.hour}:${String(preference.startTime.minute).padStart(2, '0')} - ${preference.endTime.hour}:${String(preference.endTime.minute).padStart(2, '0')}`}
+                {`${preference.startTime} - ${preference.endTime}`}
               </Typography>
               <Typography variant='caption'>
                 {preference.student

@@ -37,7 +37,7 @@ import {
   Groups,
   postGroup,
 } from '../hooks/api/use-groups.ts';
-import * as moment from 'moment';
+import moment from 'moment';
 import { fetchStudentsByIds, Student } from '../hooks/api/use-students.ts';
 
 const StyledTh = styled.th`
@@ -230,26 +230,40 @@ export const Planner = () => {
   // ) {
   //   addVote(pref.dayOfWeek, moment(hour, 'HH').format('HH:mm'));
   // }
-  const handleGetPreferencesFromGroup = async (currentGroup: Group) => {
-    currentGroup.studentIdList.map(async () => {
-      const students = await fetchStudentsByIds(currentGroup.studentIdList);
-      students.map((student: Student) => {
-        student.preferenceIdList.map(async () => {
+  const handleGetPreferencesFromGroup = async (id: number) => {
+    try {
+      // Pobierz grupę
+      const myGroup = await fetchGroupById(id);
+      setVotes({}); // Wyczyszczenie głosów
+      console.log('myGroup:', myGroup);
+
+      // Iteruj po studentach
+      for (const studentId of myGroup.studentIdList) {
+        const students = await fetchStudentsByIds([studentId]); // Pobierz konkretnego studenta
+        console.log('students:', students);
+
+        for (const student of students) {
+          // Iteruj po preferencjach studenta
           const preferences = await fetchPreferencesByIds(
             student.preferenceIdList
           );
-          preferences.map((pref: Preference) => {
+          console.log('preferences:', preferences);
+
+          for (const pref of preferences) {
+            // Dodaj głosy dla każdego zakresu godzin
             for (
               let hour = Number(pref.startTime.split(':')[0]);
-              hour < Number(pref.endTime.split(':')[0]);
+              hour <= Number(pref.endTime.split(':')[0]);
               hour++
             ) {
               addVote(pref.dayOfWeek, moment(hour, 'HH').format('HH:mm'));
             }
-          });
-        });
-      });
-    });
+          }
+        }
+      }
+    } catch (error) {
+      alert(`Error: ${error}`);
+    }
   };
 
   useEffect(() => {
@@ -274,7 +288,10 @@ export const Planner = () => {
         labelId='group'
         id='group-select'
         value={currentGroupId}
-        onChange={e => setCurrentGroupId(e.target.value as Group['id'])}
+        onChange={e => {
+          setCurrentGroupId(e.target.value as Group['id']);
+          handleGetPreferencesFromGroup(e.target.value as Group['id']);
+        }}
         fullWidth
       >
         {groups.map(group => (

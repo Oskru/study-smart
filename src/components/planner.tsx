@@ -273,15 +273,8 @@ export const Planner = () => {
       <Select
         labelId='group'
         id='group-select'
-        value={currentGroup || ''}
-        onChange={async e => {
-          const selectedId = Number(e.target.value); // Pobierz ID jako liczbę
-          setCurrentGroupId(selectedId); // Ustaw nowe ID
-          const group = groups.find(g => g.id === selectedId); // Pobierz pełny obiekt grupy
-          if (group) {
-            await handleGetPreferencesFromGroup(group); // Wywołaj funkcję z grupą
-          }
-        }}
+        value={currentGroupId}
+        onChange={e => setCurrentGroupId(e.target.value as Group['id'])}
         fullWidth
       >
         {groups.map(group => (

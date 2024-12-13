@@ -38,7 +38,11 @@ import {
   postGroup,
 } from '../hooks/api/use-groups.ts';
 import moment from 'moment';
-import { fetchStudentsByIds, Student } from '../hooks/api/use-students.ts';
+import {
+  fetchStudents,
+  fetchStudentsByIds,
+  Student,
+} from '../hooks/api/use-students.ts';
 
 const StyledTh = styled.th`
   border: 1px solid lightgray;
@@ -149,6 +153,7 @@ export default PreferenceTable;
 
 export const Planner = () => {
   const [votes, setVotes] = useState<Votes>({});
+  const [students, setStudents] = useState<Student[] | []>([]);
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
   const { user: currentUser } = useUser();
@@ -309,6 +314,9 @@ export const Planner = () => {
         name: '',
         studentIdList: [],
       });
+    });
+    fetchStudents().then(data => {
+      setStudents(data);
     });
   }, []);
 
@@ -488,7 +496,13 @@ export const Planner = () => {
             >
               <TableCell>{group.id}</TableCell>
               <TableCell>{group.name}</TableCell>
-              <TableCell>{group.studentIdList}</TableCell>
+              <TableCell>
+                {students
+                  .filter(student => group.studentIdList.includes(student.id)) // Filtrujemy studentów na podstawie group.studentIdList
+                  .map(student => student.indexNumber) // Pobieramy indexNumber każdego studenta
+                  .join(', ')}{' '}
+                {/* Łączymy je w jeden ciąg tekstowy, oddzielając przecinkiem */}
+              </TableCell>
               {currentUser?.userRole === 'ADMIN' ? (
                 <TableCell>
                   <IconButton onClick={() => handleEditOpen(group.id)}>

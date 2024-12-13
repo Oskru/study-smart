@@ -16,7 +16,7 @@ import {
   TableRow,
   TextField,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { LegacyRef, useEffect, useRef, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -43,6 +43,7 @@ import {
   fetchStudentsByIds,
   Student,
 } from '../hooks/api/use-students.ts';
+import Multiselect from 'multiselect-react-dropdown';
 
 const StyledTh = styled.th`
   border: 1px solid lightgray;
@@ -167,12 +168,13 @@ export const Planner = () => {
   const [currentGroupId, setCurrentGroupId] = useState<Group['id'] | null>(
     null
   );
+  const selectedItems = useRef();
 
   const handleEditOpen = async (id: number) => {
     try {
       setEditedGroups(groups);
       setCurrentGroupId(id);
-      setCurrentGroup(editedGroups.find(g => g.id === id));
+      setCurrentGroup(editedGroups.find(group => group.id === id));
 
       setEditDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
       console.log(currentGroupId);
@@ -221,17 +223,13 @@ export const Planner = () => {
   const handleEditConfirm = async (id: number) => {
     setEditDialogOpen(false);
 
-    // Przygotowanie obiektu grupy do edycji
-    const processedStudentIdList = currentGroup?.studentIdList
-      ? currentGroup.studentIdList
-          .toString() // Upewnij się, że to ciąg znaków
-          .split(',') // Podziel po przecinkach
-          .map(Number) // Zamień na liczby
-      : [];
+    const processed = selectedItems.current
+      ?.getSelectedItems()
+      .map(student => student.id);
 
     const groupToEdit = {
-      ...currentGroup,
-      studentIdList: processedStudentIdList, // Ustaw przetworzony studentIdList
+      ...editedGroups.find(group => group.id === id),
+      studentIdList: processed, // Ustaw przetworzony studentIdList
     };
 
     try {
@@ -411,49 +409,41 @@ export const Planner = () => {
             fullWidth
             margin='dense'
           />
-          <TextField
-            label='Student Id List'
-            value={(() => {
-              if (editDialogOpen) {
-                return currentGroupId
-                  ? editedGroups.find(g => g.id === currentGroupId)
-                      ?.studentIdList || ''
-                  : 'xd';
-              } else {
-                return currentGroup ? currentGroup.studentIdList : '';
-              }
-            })()}
-            onChange={e => {
-              const newStudentIdList = e.target.value
-                .split(',')
-                .map(id => id.trim())
-                .filter(id => id !== '') // Usuwamy puste elementy
-                .map(Number); // Konwertujemy na liczby
-
-              if (editDialogOpen) {
-                setCurrentGroup(prev => ({
-                  ...prev,
-                  name: prev?.name || '',
-                  studentIdList: newStudentIdList, // Dodajemy domyślną pustą tablicę, jeśli studentIdList jest undefined
-                }));
-                setEditedGroups(prevGroups =>
-                  prevGroups.map(
-                    group =>
-                      group.id === currentGroupId
-                        ? { ...group, studentIdList: newStudentIdList } // Zmodyfikowany element
-                        : group // Pozostaw pozostałe elementy bez zmian
-                  )
-                );
-              } else {
-                setCurrentGroup(prev => ({
-                  ...prev,
-                  name: prev?.name || '',
-                  studentIdList: newStudentIdList, // Dodajemy domyślną pustą tablicę, jeśli studentIdList jest undefined
-                }));
-              }
+          <Button
+            onClick={() =>
+              console.log(selectedItems.current?.getSelectedItems())
+            }
+          >
+            Get selected
+          </Button>
+          <Multiselect
+            style={{
+              multiselectContainer: {
+                // To change css for multiselect (Width,height,etc..)
+                height: '500px',
+              },
+              option: {
+                // To change css for dropdown options
+                color: 'blue',
+              },
             }}
-            fullWidth
-            margin='dense'
+            options={students.map(student => ({
+              name: `${student.lastName}, ${student.indexNumber}`,
+              id: student.id,
+            }))}
+            displayValue='name'
+            selectedValues={students
+              .filter(student =>
+                editedGroups
+                  .find(g => g.id === currentGroupId)
+                  ?.studentIdList.includes(student.id)
+              )
+              .map(student => ({
+                name: `${student.lastName}, ${student.indexNumber}`,
+                id: student.id,
+              }))}
+            showCheckbox
+            ref={selectedItems as unknown as LegacyRef<Multiselect>}
           />
           {/* Additional fields for role-specific data can be added here */}
         </DialogContent>

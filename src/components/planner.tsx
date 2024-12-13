@@ -433,20 +433,22 @@ export const Planner = () => {
               if (editDialogOpen) {
                 setCurrentGroup(prev => ({
                   ...prev,
-                  studentIdList: e.target.value,
+                  name: prev?.name || '',
+                  studentIdList: newStudentIdList, // Dodajemy domyślną pustą tablicę, jeśli studentIdList jest undefined
                 }));
                 setEditedGroups(prevGroups =>
                   prevGroups.map(
                     group =>
                       group.id === currentGroupId
-                        ? { ...group, studentIdList: newStudentIdList || '' } // Zmodyfikowany element
+                        ? { ...group, studentIdList: newStudentIdList } // Zmodyfikowany element
                         : group // Pozostaw pozostałe elementy bez zmian
                   )
                 );
               } else {
                 setCurrentGroup(prev => ({
                   ...prev,
-                  studentIdList: e.target.value,
+                  name: prev?.name || '',
+                  studentIdList: newStudentIdList, // Dodajemy domyślną pustą tablicę, jeśli studentIdList jest undefined
                 }));
               }
             }}
@@ -468,7 +470,7 @@ export const Planner = () => {
           <Button
             onClick={() =>
               editDialogOpen
-                ? handleEditConfirm(currentGroupId)
+                ? handleEditConfirm(currentGroupId ?? -1)
                 : handleAddConfirm()
             }
             color='primary'

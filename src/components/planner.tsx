@@ -42,10 +42,12 @@ import { fetchStudentsByIds, Student } from '../hooks/api/use-students.ts';
 
 const StyledTh = styled.th`
   border: 1px solid lightgray;
+  font-weight: bold;
 `;
 
 const StyledTr = styled.tr`
   border: 1px solid lightgray;
+  font-weight: bold;
 `;
 
 // Funkcja do obliczania koloru tła na podstawie liczby głosów
@@ -67,6 +69,7 @@ const StyledTd = styled.td<{ votes: number }>`
   color: black;
   padding: 10px;
   text-align: center;
+  font-size: 15px;
   font-weight: bold;
   border: 1px solid #ddd;
 `;
@@ -251,22 +254,6 @@ export const Planner = () => {
     }));
   };
 
-  //TODO: Do zmiany
-  const renderVotes = (): JSX.Element[] =>
-    Object.entries(votes).map(([key, count]) => (
-      <div key={key}>
-        {key}: {count} głosów
-      </div>
-    ));
-
-  // Do użycia w preferenceIdList
-  // for (
-  //   let hour = Number(pref.startTime.split(':')[0]);
-  //   hour < Number(pref.endTime.split(':')[0]);
-  //   hour++
-  // ) {
-  //   addVote(pref.dayOfWeek, moment(hour, 'HH').format('HH:mm'));
-  // }
   const handleGetPreferencesFromGroup = async (id: number) => {
     try {
       // Pobierz grupę
@@ -274,20 +261,27 @@ export const Planner = () => {
       setVotes({}); // Wyczyszczenie głosów
       console.log('myGroup:', myGroup);
 
-      // Iteruj po studentach
-      for (const studentId of myGroup.studentIdList) {
-        const students = await fetchStudentsByIds([studentId]); // Pobierz konkretnego studenta
-        console.log('students:', students);
+      // Pobierz wszystkich studentów równolegle
+      const studentsPromises = myGroup.studentIdList.map(studentId =>
+        fetchStudentsByIds([studentId])
+      );
 
-        for (const student of students) {
-          // Iteruj po preferencjach studenta
-          const preferences = await fetchPreferencesByIds(
-            student.preferenceIdList
+      const studentsResults = await Promise.all(studentsPromises);
+
+      // Iteruj po każdym zestawie studentów i ich preferencjach
+      await Promise.all(
+        studentsResults.flat().map(async student => {
+          console.log('students:', student);
+
+          // Pobierz preferencje studenta równolegle
+          const preferencesPromises = student.preferenceIdList.map(prefId =>
+            fetchPreferencesByIds([prefId])
           );
-          console.log('preferences:', preferences);
 
-          for (const pref of preferences) {
-            // Dodaj głosy dla każdego zakresu godzin
+          const preferencesResults = await Promise.all(preferencesPromises);
+          console.log(preferencesResults);
+          // Iteruj po preferencjach studenta i dodaj głosy
+          preferencesResults.flat().forEach(pref => {
             for (
               let hour = Number(pref.startTime.split(':')[0]);
               hour <= Number(pref.endTime.split(':')[0]);
@@ -295,9 +289,9 @@ export const Planner = () => {
             ) {
               addVote(pref.dayOfWeek, moment(hour, 'HH').format('HH:mm'));
             }
-          }
-        }
-      }
+          });
+        })
+      );
     } catch (error) {
       alert(`Error: ${error}`);
     }

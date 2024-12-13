@@ -36,10 +36,7 @@ export const editGroup = async (
   data: Partial<Group>
 ): Promise<Group> => {
   // Wyślij żądanie do API, np.:
-  const response = await apiInstance.put<Group>(`${GROUPS_URL}/${id}`, {
-    data,
-  });
-
+  const response = await apiInstance.put<Group>(`${GROUPS_URL}/${id}`, data);
   return response.data;
 };
 

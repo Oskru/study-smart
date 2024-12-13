@@ -127,14 +127,10 @@ export const Planner = () => {
     try {
       setEditedGroups(groups);
       setCurrentGroupId(id);
-      const data = await fetchGroupById(currentGroupId ? currentGroupId : 1);
+      setCurrentGroup(editedGroups.find(g => g.id === id));
 
-      setCurrentGroup({
-        name: data ? data.name : 'Coś nie poszło',
-        studentIdList: data ? data.studentIdList : [],
-      });
-      console.log(currentGroupId);
       setEditDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
+      console.log(currentGroupId);
     } catch (error) {
       alert('Failed to fetch group data!');
       console.error(error);
@@ -178,15 +174,36 @@ export const Planner = () => {
   };
 
   const handleEditConfirm = async (id: number) => {
-    setAddDialogOpen(false);
-    editGroup(id, currentGroup as Group)
-      .then(() => {
-        setEditedGroups(prev => [...prev, currentGroup]);
-        setGroups(editedGroups);
-      })
-      .catch(error => {
-        alert(`Error while posting preference: ${error}`);
-      });
+    setEditDialogOpen(false);
+
+    // Przygotowanie obiektu grupy do edycji
+    const processedStudentIdList = currentGroup?.studentIdList
+      ? currentGroup.studentIdList
+          .toString() // Upewnij się, że to ciąg znaków
+          .split(',') // Podziel po przecinkach
+          .map(Number) // Zamień na liczby
+      : [];
+
+    const groupToEdit = {
+      ...currentGroup,
+      studentIdList: processedStudentIdList, // Ustaw przetworzony studentIdList
+    };
+
+    try {
+      await editGroup(id, groupToEdit as Group);
+
+      // Zaktualizowanie stanu `groups` po pomyślnej edycji
+      setGroups(prevGroups =>
+        prevGroups.map(
+          group =>
+            group.id === id
+              ? { ...group, ...groupToEdit } // Aktualizacja grupy w stanie
+              : group // Pozostałe grupy bez zmian
+        )
+      );
+    } catch (error) {
+      alert(`Error while updating group: ${error}`);
+    }
   };
 
   const addVote = (day: string, hour: string): void => {

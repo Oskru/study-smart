@@ -1,27 +1,24 @@
+import React from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import AppContainer from './app-container.tsx';
-import { Fab } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { fetchUsers, User } from '../hooks/api/use-users.ts';
-import { useUser } from '../hooks/use-user.ts';
-import AddIcon from '@mui/icons-material/Add';
+import { Button, Box } from '@mui/material';
 
 export const Admin = () => {
-  const [users, setUsers] = useState<User[] | []>([]);
-  const { user: currentUser } = useUser();
-
-  useEffect(() => {
-    fetchUsers().then(data => setUsers(data));
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <AppContainer title='Admin Panel'>
-      <Fab
-        color='primary'
-        aria-label='add'
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-      >
-        <AddIcon />
-      </Fab>
+    <AppContainer title="Panel Administratora">
+      <Box display="flex" gap={2}>
+        <Button onClick={() => navigate('users')} variant="contained">
+          Lista Użytkowników
+        </Button>
+        <Button onClick={() => navigate('add-planner')} variant="contained">
+          Dodaj Planistę
+        </Button>
+      </Box>
+      <Outlet /> {/* Renderowanie dzieci (UserList, AddPlanner) */}
     </AppContainer>
   );
 };
+
+export default Admin;

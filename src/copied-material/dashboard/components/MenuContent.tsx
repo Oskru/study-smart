@@ -17,7 +17,6 @@ const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon />, url: '/' },
   { text: 'Preferences', icon: <AnalyticsRoundedIcon />, url: '/preferences' },
   { text: 'Students', icon: <PeopleRoundedIcon />, url: '/students' },
-  { text: 'Users', icon: <PeopleRoundedIcon />, url: '/users' },
   { text: 'Planner', icon: <PeopleRoundedIcon />, url: '/planner' },
   { text: 'Admin Panel', icon: <PeopleRoundedIcon />, url: '/admin-panel' },
 ];

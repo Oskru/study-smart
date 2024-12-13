@@ -379,8 +379,7 @@ export const Planner = () => {
             value={(() => {
               if (editDialogOpen) {
                 return currentGroupId
-                  ? editedGroups.find(g => g.id === currentGroupId)?.name ||
-                      'lol'
+                  ? editedGroups.find(g => g.id === currentGroupId)?.name || ''
                   : 'xd';
               } else {
                 return currentGroup ? currentGroup.name : '';
@@ -391,6 +390,7 @@ export const Planner = () => {
                 setCurrentGroup(prev => ({
                   ...prev,
                   name: e.target.value,
+                  studentIdList: prev?.studentIdList || [], // Dodajemy domyślną pustą tablicę, jeśli studentIdList jest undefined
                 }));
                 setEditedGroups(prevGroups =>
                   prevGroups.map(
@@ -404,6 +404,7 @@ export const Planner = () => {
                 setCurrentGroup(prev => ({
                   ...prev,
                   name: e.target.value,
+                  studentIdList: prev?.studentIdList || [], // Zapewniamy, że studentIdList nie będzie undefined
                 }));
               }
             }}
@@ -416,7 +417,7 @@ export const Planner = () => {
               if (editDialogOpen) {
                 return currentGroupId
                   ? editedGroups.find(g => g.id === currentGroupId)
-                      ?.studentIdList || 'lol'
+                      ?.studentIdList || ''
                   : 'xd';
               } else {
                 return currentGroup ? currentGroup.studentIdList : '';

@@ -35,6 +35,7 @@ import {
   SelectedDataProps,
 } from '@marinos33/react-week-time-range-picker';
 import { Group } from '../hooks/api/use-groups.ts';
+import { array } from 'zod';
 
 // Styled component for each time slot
 const TimeSlot = styled(Paper)(({ theme }) => ({
@@ -48,120 +49,126 @@ const TimeSlot = styled(Paper)(({ theme }) => ({
 }));
 
 function Preferences() {
-  const [dayOfWeek, setDayOfWeek] = useState('');
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
-  const [preferences, setPreferences] = useState<PreferencesType>([]);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [currentPreference, setCurrentPreference] = useState<Omit<
-    Preference,
-    'id'
-  > | null>(null);
+  const [dayOfWeek, setDayOfWeek] = useState('Monday');
+  const [preferences, setPreferences] = useState<
+    SelectedDataProps[] | undefined
+  >(undefined);
+  const [preferencesResponse, setPreferencesResponse] =
+    useState<PreferencesType>([]);
   const { user } = useUser();
 
   // Populate preferences once data is fetched
   useEffect(() => {
-    fetchPreferences().then(data => setPreferences(data));
+    fetchPreferences().then(data => setPreferencesResponse(data));
     fetchCourses().then(data => {
       setCourses(data);
       setCurrentCourse(data[0].id);
     });
   }, []);
 
-  // Filter preferences based on selected day
-  const filteredPreferences = preferences.filter(
-    preference => preference.dayOfWeek === dayOfWeek
+  const filteredPreferences = preferencesResponse.filter(
+    preference => preference.dayName === dayOfWeek
   );
 
-  // Dialog handlers remain similar with adjustments for dynamic data
-  const handleDeleteOpen = (preference: Omit<Preference, 'id'>) => {
-    setCurrentPreference(preference);
-    setDeleteDialogOpen(true);
+  const handleSelectTimeRange = (selectedData: SelectedDataProps[]) => {
+    setPreferences(selectedData);
+    console.log(selectedData);
   };
-  const handleDeleteConfirm = async (id: number) => {
-    deletePreference(id)
+
+  const handleDeletePreference = (preferenceToDelete: Preference) => {
+    deletePreference(preferenceToDelete.id!)
       .then(() => {
-        setPreferences(
-          preferences.filter(preference => {
-            return preference.id !== id;
+        setPreferencesResponse(
+          preferencesResponse.filter(preference => {
+            return preference.id !== preferenceToDelete.id;
           })
         );
       })
       .catch(error => alert(`Error while deleting preference: ${error}`));
-    setDeleteDialogOpen(false);
-    setCurrentPreference(null);
   };
 
-  const handleAddOpen = () => {
-    setCurrentPreference({
-      dayOfWeek: 'Monday',
-      startTime: '00:00',
-      endTime: '00:00',
-      studentId: user!.id,
-      courseId: currentCourse!,
-    });
-    setAddDialogOpen(true);
-  };
+  const handleSendPreferences = () => {
+    const preferencePosts = [];
+    for (let preference of preferences!) {
+      const flattenedPreferences: string[] = preference.timeRanges!.reduce(
+        (acc, curr) => acc.concat(curr),
+        []
+      );
+      preferencePosts.push(
+        postPreference({
+          dayId: Number(preference.iden),
+          dayName: preference.dayName as Preference['dayName'],
+          timeRanges: flattenedPreferences,
+          times: preference.times!,
+          courseId: 0,
+          studentId: Number(user?.id),
+        })
+      );
+    }
 
-  const handleAddConfirm = () => {
-    setAddDialogOpen(false);
-    postPreference(currentPreference as Preference)
-      .then(() => {
-        setPreferences(prev => [...prev, currentPreference]);
-      })
-      .catch(error => {
-        alert(`Error while posting preference: ${error}`);
-      });
-  };
-
-  const handleSelectTimeRange = (selectedData: SelectedDataProps[]) => {
-    console.log(selectedData);
+    Promise.all(preferencePosts)
+      .then(() => alert('Successfully added preferences!'))
+      .catch(() => alert('Failed to add preferences'));
   };
 
   return (
     <AppContainer title='Preferences Management'>
-      <ReactWeekTimeRangePicker selectTimeRange={handleSelectTimeRange} />
-      <InputLabel id='day-of-week'>Day of week</InputLabel>
-      <Select
-        labelId='day-of-week'
-        id='day-of-week-select'
-        value={dayOfWeek}
-        onChange={e => setDayOfWeek(e.target.value)}
-        fullWidth
-      >
-        {[
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ].map(day => (
-          <MenuItem key={day} value={day}>
-            {day}
-          </MenuItem>
-        ))}
-      </Select>
+      <Box display='flex' flexDirection='column' gap={4}>
+        <ReactWeekTimeRangePicker selectTimeRange={handleSelectTimeRange} />
+        {preferences && Object.keys(preferences).length !== 0 ? (
+          <Button
+            variant='contained'
+            size='large'
+            disabled={!preferences}
+            onClick={handleSendPreferences}
+          >
+            Send preference
+          </Button>
+        ) : null}
 
-      <InputLabel id='course'>Course</InputLabel>
-      <Select
-        labelId='course'
-        id='course-select'
-        value={currentCourse}
-        onChange={e => setCurrentCourse(e.target.value as Course['id'])}
-        fullWidth
-      >
-        {courses.map(course => (
-          <MenuItem key={course.id} value={course.id}>
-            {course.name}
-          </MenuItem>
-        ))}
-      </Select>
+        <div>
+          <InputLabel id='day-of-week'>Day of week</InputLabel>
+          <Select
+            labelId='day-of-week'
+            id='day-of-week-select'
+            value={dayOfWeek}
+            onChange={e => setDayOfWeek(e.target.value)}
+            fullWidth
+          >
+            {[
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday',
+              'Saturday',
+              'Sunday',
+            ].map(day => (
+              <MenuItem key={day} value={day}>
+                {day}
+              </MenuItem>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <InputLabel id='course'>Course</InputLabel>
+          <Select
+            labelId='course'
+            id='course-select'
+            value={currentCourse}
+            onChange={e => setCurrentCourse(e.target.value as Course['id'])}
+            fullWidth
+          >
+            {courses.map(course => (
+              <MenuItem key={course.id} value={course.id}>
+                {course.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </div>
 
-      <Box sx={{ mt: 4 }}>
         <Typography variant='h6'>
           Availabilities for {dayOfWeek || '...'}
         </Typography>
@@ -169,16 +176,14 @@ function Preferences() {
           filteredPreferences.map(preference => (
             <TimeSlot key={preference.id} elevation={3}>
               <Typography variant='body1'>
-                {`${preference.startTime} - ${preference.endTime}`}
+                {`${preference.times[0]} - ${preference.times[preference.times.length - 1]}`}
               </Typography>
               <Typography variant='caption'>
-                {preference.student
-                  ? `${preference.student.firstName} ${preference.student.lastName}`
-                  : `${preference.lecturer?.firstName} ${preference.lecturer?.lastName}`}
+                {`${preference.dayName} ${preference.courseId}`}
               </Typography>
               <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                 <IconButton
-                  onClick={() => handleDeleteOpen(preference)}
+                  onClick={() => handleDeletePreference(preference)}
                   size='small'
                 >
                   <DeleteIcon fontSize='small' />
@@ -192,99 +197,6 @@ function Preferences() {
           </Typography>
         )}
       </Box>
-
-      <Fab
-        color='primary'
-        aria-label='add'
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={handleAddOpen}
-      >
-        <AddIcon />
-      </Fab>
-
-      {/* Add/Edit Dialog */}
-      <Dialog
-        open={editDialogOpen || addDialogOpen}
-        onClose={() =>
-          editDialogOpen ? setEditDialogOpen(false) : setAddDialogOpen(false)
-        }
-      >
-        <DialogTitle>
-          {editDialogOpen ? 'Edit Preference' : 'Add Preference'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            label='Day of Week'
-            value={currentPreference?.dayOfWeek || ''}
-            onChange={e =>
-              setCurrentPreference(prev => ({
-                ...prev,
-                dayOfWeek: e.target.value,
-              }))
-            }
-            fullWidth
-            margin='dense'
-          />
-          <TextField
-            label='Start Time (HH:mm)'
-            value={currentPreference?.startTime || ''}
-            onChange={e =>
-              setCurrentPreference(prev => ({
-                ...prev,
-                startTime: e.target.value,
-              }))
-            }
-            fullWidth
-            margin='dense'
-          />
-          <TextField
-            label='End Time (HH:mm)'
-            value={currentPreference?.endTime || ''}
-            onChange={e =>
-              setCurrentPreference(prev => ({
-                ...prev,
-                endTime: e.target.value,
-              }))
-            }
-            fullWidth
-            margin='dense'
-          />
-          {/* Additional fields for role-specific data can be added here */}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() =>
-              editDialogOpen
-                ? setEditDialogOpen(false)
-                : setAddDialogOpen(false)
-            }
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleAddConfirm} color='primary'>
-            {editDialogOpen ? 'Save' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this preference?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={() => {}} color='error'>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
     </AppContainer>
   );
 }

@@ -16,7 +16,7 @@ export const availabilitySchema = z.object({
     'Sunday',
   ]),
   times: z.array(z.string()),
-  timeRanges: z.array(z.string()),
+  timeRanges: z.array(z.array(z.string())),
   lecturerId: z.number(),
 });
 
@@ -28,22 +28,22 @@ const availabilitiesSchema = z.union([
 export type Availability = z.infer<typeof availabilitySchema>;
 export type Availabilities = z.infer<typeof availabilitiesSchema>;
 
-export const fetchAvailabilties = async (): Promise<Availabilities> => {
+export const fetchAvailabilities = async (): Promise<Availabilities> => {
   const response = await apiInstance.get<Availability[]>(AVAILABILITIES_URL);
 
   return response.data;
 };
 
 export const postAvailability = async (
-  availability: Omit<Availability, 'id'>
+  availability: Omit<Availability, 'id'>[]
 ) => {
   await apiInstance.post<Availabilities>(AVAILABILITIES_URL, availability);
 };
 
-export const fetchAvailabiltiesById = async (
+export const fetchAvailabilitiesById = async (
   availabilityIds: number[]
 ): Promise<Availability[]> => {
-  const availabilities = await fetchAvailabilties();
+  const availabilities = await fetchAvailabilities();
   return availabilities.filter(availability =>
     availabilityIds.includes(availability.id)
   );

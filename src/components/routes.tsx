@@ -13,8 +13,8 @@ import { Planner } from './planner.tsx';
 import { Admin } from './admin-panel.tsx';
 import UserList from './user-list.tsx';
 import AddPlanner from './add-planner.tsx';
-
-
+import Availabilities from './availabilities.tsx';
+import { About } from './about.tsx';
 
 export default function Routes() {
   const { token } = useUser();
@@ -50,8 +50,16 @@ export default function Routes() {
           element: <Preferences />,
         },
         {
+          path: '/availabilities',
+          element: <Availabilities />,
+        },
+        {
           path: '/students',
           element: <Students />,
+        },
+        {
+          path: '/about',
+          element: <About />,
         },
         // {
         //   path: '/users',
@@ -71,10 +79,10 @@ export default function Routes() {
             },
             {
               path: 'add-planner',
-              element: <AddPlanner />, 
+              element: <AddPlanner />,
             },
           ],
-        }        
+        },
       ],
     },
   ];

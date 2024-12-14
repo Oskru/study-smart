@@ -8,35 +8,23 @@ import {
   Box,
   Paper,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
-  TextField,
-  Fab,
 } from '@mui/material';
 import { styled } from '@mui/system';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import {
-  DayNames,
-  deletePreference,
-  fetchPreferences,
-  postPreference,
-  Preference,
-  Preferences as PreferencesType,
-  useGetPreferences,
-} from '../hooks/api/use-get-preferences.ts';
 import { useUser } from '../hooks/use-user.ts';
 import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
 import {
   ReactWeekTimeRangePicker,
   SelectedDataProps,
 } from '@marinos33/react-week-time-range-picker';
-import { Group } from '../hooks/api/use-groups.ts';
-import { array } from 'zod';
+import {
+  Availabilities as AvailabilitiesType,
+  Availability,
+  deleteAvailability,
+  fetchAvailabilities,
+  postAvailability,
+} from '../hooks/api/use-availabilities.ts';
 
 // Styled component for each time slot
 const TimeSlot = styled(Paper)(({ theme }) => ({
@@ -49,85 +37,66 @@ const TimeSlot = styled(Paper)(({ theme }) => ({
   position: 'relative',
 }));
 
-function Preferences() {
+function Availabilities() {
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
   const [dayOfWeek, setDayOfWeek] = useState('Monday');
-  const [preferences, setPreferences] = useState<
+  const [availabilities, setAvailabilities] = useState<
     SelectedDataProps[] | undefined
   >(undefined);
-  const [preferencesResponse, setPreferencesResponse] =
-    useState<PreferencesType>([]);
+  const [availabilitiesResponse, setAvailabilitiesResponse] =
+    useState<AvailabilitiesType>([]);
   const { user } = useUser();
 
   // Populate preferences once data is fetched
   useEffect(() => {
-    fetchPreferences().then(data => setPreferencesResponse(data));
+    fetchAvailabilities().then(data => setAvailabilitiesResponse(data));
     fetchCourses().then(data => {
       setCourses(data);
       setCurrentCourse(data[0].id);
     });
   }, []);
 
-  const filteredPreferences = preferencesResponse.filter(
+  const filteredAvailabilities = availabilitiesResponse.filter(
     preference =>
       preference.dayName === dayOfWeek && preference.courseId === currentCourse
   );
 
   const handleSelectTimeRange = (selectedData: SelectedDataProps[]) => {
-    setPreferences(selectedData);
+    setAvailabilities(selectedData);
     console.log(selectedData);
   };
 
-  const handleDeletePreference = (preferenceToDelete: Preference) => {
-    deletePreference(preferenceToDelete.id!)
+  const handleDeleteAvailability = (availabilityToDelete: Availability) => {
+    deleteAvailability(availabilityToDelete.id!)
       .then(() => {
-        setPreferencesResponse(
-          preferencesResponse.filter(preference => {
-            return preference.id !== preferenceToDelete.id;
+        setAvailabilitiesResponse(
+          availabilitiesResponse.filter(preference => {
+            return preference.id !== availabilityToDelete.id;
           })
         );
       })
       .catch(error => alert(`Error while deleting preference: ${error}`));
   };
 
-  const handleSendPreferences = () => {
-    postPreference(
-      preferences!.map(preference => {
+  const handleSendAvailabilities = () => {
+    postAvailability(
+      availabilities!.map(availability => {
         return {
-          dayId: Number(preference.iden),
-          dayName: preference.dayName as Preference['dayName'],
-          timeRanges: preference.timeRanges,
-          times: preference.times!,
-          courseId: currentCourse,
-          studentId: Number(user?.id),
-        } as unknown as Preference;
+          dayId: Number(availability.iden),
+          dayName: availability.dayName as Availability['dayName'],
+          timeRanges: availability.timeRanges,
+          times: availability.times!,
+          lecturerId: Number(user?.id),
+        } as unknown as Availability;
       })
     );
   };
 
   return (
-    <AppContainer title='Preferences Management'>
+    <AppContainer title='Availabilities Management'>
       <Box display='flex' flexDirection='column' gap={4}>
         <ReactWeekTimeRangePicker selectTimeRange={handleSelectTimeRange} />
-        <div>
-          <InputLabel id='course'>
-            Course* (required to send preference)
-          </InputLabel>
-          <Select
-            labelId='course'
-            id='course-select'
-            value={currentCourse}
-            onChange={e => setCurrentCourse(e.target.value as Course['id'])}
-            fullWidth
-          >
-            {courses.map(course => (
-              <MenuItem key={course.id} value={course.id}>
-                {course.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </div>
         <div>
           <InputLabel id='day-of-week'>Day of week</InputLabel>
           <Select
@@ -152,26 +121,21 @@ function Preferences() {
             ))}
           </Select>
         </div>
-        {preferences &&
-        Object.keys(preferences).length !== 0 &&
-        currentCourse ? (
+        {availabilities && Object.keys(availabilities).length !== 0 ? (
           <Button
             variant='contained'
             size='large'
-            disabled={!preferences}
-            onClick={handleSendPreferences}
+            disabled={!availabilities}
+            onClick={handleSendAvailabilities}
           >
-            Send preference
+            Send availability
           </Button>
         ) : null}
         <Typography variant='h6'>
-          Availabilities for{' '}
-          {courses.find(course => course.id === currentCourse)?.name}
-          {', '}
-          {dayOfWeek || '...'}
+          Availabilities for {dayOfWeek || '...'}
         </Typography>
-        {filteredPreferences.length > 0 ? (
-          filteredPreferences.map(preference => (
+        {filteredAvailabilities.length > 0 ? (
+          filteredAvailabilities.map(preference => (
             <TimeSlot key={preference.id} elevation={3}>
               <Typography variant='body1'>
                 {`${preference.times[0]} - ${preference.times[preference.times.length - 1]}`}
@@ -181,7 +145,7 @@ function Preferences() {
               </Typography>
               <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                 <IconButton
-                  onClick={() => handleDeletePreference(preference)}
+                  onClick={() => handleDeleteAvailability(preference)}
                   size='small'
                 >
                   <DeleteIcon fontSize='small' />
@@ -199,4 +163,4 @@ function Preferences() {
   );
 }
 
-export default Preferences;
+export default Availabilities;

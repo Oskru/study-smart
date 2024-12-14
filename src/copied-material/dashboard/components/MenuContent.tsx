@@ -16,6 +16,11 @@ import { useNavigate } from 'react-router-dom';
 const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon />, url: '/' },
   { text: 'Preferences', icon: <AnalyticsRoundedIcon />, url: '/preferences' },
+  {
+    text: 'Availabilities',
+    icon: <AnalyticsRoundedIcon />,
+    url: '/availabilities',
+  },
   { text: 'Students', icon: <PeopleRoundedIcon />, url: '/students' },
   { text: 'Planner', icon: <PeopleRoundedIcon />, url: '/planner' },
   { text: 'Admin Panel', icon: <PeopleRoundedIcon />, url: '/admin-panel' },

@@ -28,6 +28,15 @@ export const fetchLecturers = async (): Promise<Lecturer[] | []> => {
   return response.data;
 };
 
+export const putAddCourseToLecturer = async (
+  lecturerId: number,
+  courseId: number
+) => {
+  await apiInstance.put(
+    `${LECTURERS_URL}/${lecturerId}/add-course/${courseId}}`
+  );
+};
+
 export const fetchLecturerById = async (
   lecturerId: number
 ): Promise<Lecturer[]> => {

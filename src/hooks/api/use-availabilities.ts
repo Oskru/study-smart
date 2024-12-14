@@ -17,8 +17,7 @@ export const availabilitySchema = z.object({
   ]),
   times: z.array(z.string()),
   timeRanges: z.array(z.string()),
-  studentId: z.number(),
-  courseId: z.number(), // do wyrzucenia?
+  lecturerId: z.number(),
 });
 
 const availabilitiesSchema = z.union([

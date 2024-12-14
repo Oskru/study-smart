@@ -15,7 +15,7 @@ const dayNameSchema = z.enum([
 ]);
 
 const preferenceSchema = z.object({
-  id: z.number().nullable(),
+  id: z.number(),
   dayId: z.number(),
   dayName: dayNameSchema,
   times: z.array(z.string()),

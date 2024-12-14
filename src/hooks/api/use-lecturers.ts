@@ -33,7 +33,7 @@ export const putAddCourseToLecturer = async (
   courseId: number
 ) => {
   await apiInstance.put(
-    `${LECTURERS_URL}/${lecturerId}/add-course/${courseId}}`
+    `${LECTURERS_URL}/${lecturerId}/add-course/${courseId}`
   );
 };
 

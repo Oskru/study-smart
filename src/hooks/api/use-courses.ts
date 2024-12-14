@@ -1,5 +1,5 @@
 import { apiInstance } from '../../utils/api-instance.ts';
-import { COURSES_URL, USERS_URL } from '../../utils/consts/api.ts';
+import { COURSES_URL } from '../../utils/consts/api.ts';
 import { z } from 'zod';
 
 export const courseSchema = z.object({
@@ -13,13 +13,10 @@ export const courseSchema = z.object({
   lecturerId: z.number(),
 });
 
-const coursesSchema = z.union([z.array(courseSchema), z.array(z.any())]);
-
 export type Course = z.infer<typeof courseSchema>;
-export type Courses = z.infer<typeof coursesSchema>;
 
-export const fetchCourses = async (): Promise<Courses> => {
-  const response = await apiInstance.get<Courses>(COURSES_URL);
+export const fetchCourses = async (): Promise<Course[] | []> => {
+  const response = await apiInstance.get<Course[] | []>(COURSES_URL);
 
   return response.data;
 };

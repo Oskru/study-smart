@@ -45,6 +45,11 @@ import {
   Student,
 } from '../hooks/api/use-students.ts';
 import Multiselect from 'multiselect-react-dropdown';
+import {
+  fetchLecturers,
+  Lecturer,
+  putAddCourseToLecturer,
+} from '../hooks/api/use-lecturers.ts';
 
 const StyledTh = styled.th`
   border: 1px solid lightgray;
@@ -107,7 +112,15 @@ const hours = [
   '23:00',
 ];
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const days = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
 type Votes = {
   [key: string]: number; // Klucz: "Dzień-Godzina", wartość: liczba głosów
@@ -158,10 +171,18 @@ export const Planner = () => {
   const [students, setStudents] = useState<Student[] | []>([]);
   const [preferences, setPreferences] = useState<Preference[] | []>([]);
   const [courses, setCourses] = useState<Course[] | []>([]);
+  const [currentLecturer, setCurrentLecturer] = useState<Lecturer['id'] | null>(
+    null
+  );
+  const [lecturers, setLecturers] = useState<Lecturer[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
   const { user: currentUser } = useUser();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  //REF
+  const selectedItems = useRef();
+
+  //GROUPS
+  const [editGroupDialogOpen, setEditGroupDialogOpen] = useState(false);
+  const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
   const [groups, setGroups] = useState<Groups>([]);
   const [editedGroups, setEditedGroups] = useState<Groups>([]);
   const [currentGroup, setCurrentGroup] = useState<Omit<Group, 'id'> | null>(
@@ -170,15 +191,23 @@ export const Planner = () => {
   const [currentGroupId, setCurrentGroupId] = useState<Group['id'] | null>(
     null
   );
-  const selectedItems = useRef();
 
-  const handleEditOpen = async (id: number) => {
+  //GROUP METHODS
+  const handleAddGroupOpen = () => {
+    setCurrentGroup({
+      name: '',
+      studentIdList: [],
+    });
+    setAddGroupDialogOpen(true);
+  };
+
+  const handleEditGroupOpen = async (id: number) => {
     try {
       setEditedGroups(groups);
       setCurrentGroupId(id);
       setCurrentGroup(editedGroups.find(group => group.id === id));
 
-      setEditDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
+      setEditGroupDialogOpen(true); // Wywołanie dopiero po ustawieniu danych
       console.log(currentGroupId);
     } catch (error) {
       alert('Failed to fetch group data!');
@@ -186,22 +215,8 @@ export const Planner = () => {
     }
   };
 
-  const handleDeleteGroup = async (id: number) => {
-    deleteGroup(id)
-      .then(() => setGroups(groups.filter(group => group.id !== id)))
-      .catch(() => alert('Failed to delete group!'));
-  };
-
-  const handleAddOpen = () => {
-    setCurrentGroup({
-      name: '',
-      studentIdList: [],
-    });
-    setAddDialogOpen(true);
-  };
-
-  const handleAddConfirm = () => {
-    setAddDialogOpen(false);
+  const handleAddGroupConfirm = () => {
+    setAddGroupDialogOpen(false);
     console.log(currentGroup?.studentIdList);
     const processedStudentIdList = currentGroup?.studentIdList
       ? currentGroup.studentIdList.toString().split(',').map(Number)
@@ -222,8 +237,8 @@ export const Planner = () => {
       });
   };
 
-  const handleEditConfirm = async (id: number) => {
-    setEditDialogOpen(false);
+  const handleEditGroupConfirm = async (id: number) => {
+    setEditGroupDialogOpen(false);
 
     const processed = selectedItems.current
       ?.getSelectedItems()
@@ -251,12 +266,24 @@ export const Planner = () => {
     }
   };
 
+  const handleDeleteGroup = async (id: number) => {
+    deleteGroup(id)
+      .then(() => setGroups(groups.filter(group => group.id !== id)))
+      .catch(() => alert('Failed to delete group!'));
+  };
+
   const addVote = (day: string, hour: string): void => {
     const key = `${day}-${hour}`;
     setVotes(prevVotes => ({
       ...prevVotes,
       [key]: (prevVotes[key] || 0) + 1, // Zwiększ licznik dla danego dnia i godziny
     }));
+  };
+
+  const handleAddCourseToLecturer = (lecturerId: number, courseId: number) => {
+    putAddCourseToLecturer(lecturerId, courseId).catch(error => {
+      alert(`Error while adding course to lecturer: ${error}`);
+    });
   };
 
   const handleGetPreferencesFromGroup = async (id: number) => {
@@ -300,6 +327,10 @@ export const Planner = () => {
     fetchStudents().then(data => {
       setStudents(data);
     });
+    fetchLecturers().then(data => {
+      setLecturers(data);
+      setCurrentLecturer(data[0].id);
+    });
     fetchPreferences().then(data => {
       setPreferences(data);
     });
@@ -307,6 +338,7 @@ export const Planner = () => {
 
   return (
     <AppContainer title='View your users'>
+      {/* Group Select */}
       <InputLabel id='group'>Group</InputLabel>
       <Select
         labelId='group'
@@ -325,6 +357,7 @@ export const Planner = () => {
         ))}
       </Select>
 
+      {/* Course Select */}
       <InputLabel id='course'>Course</InputLabel>
       <Select
         labelId='course'
@@ -335,34 +368,67 @@ export const Planner = () => {
       >
         {courses.map(course => (
           <MenuItem key={course.id} value={course.id}>
-            {course.name}
+            {course.name} {course.id}
           </MenuItem>
         ))}
       </Select>
-      {/* {renderVotes()} */}
+
+      {/* Lecturer Select */}
+      <InputLabel id='lecturer'>Lecturer</InputLabel>
+      <Select
+        labelId='lecturer'
+        id='lecturer-select'
+        value={currentLecturer}
+        onChange={e => setCurrentLecturer(e.target.value as Lecturer['id'])}
+        fullWidth
+      >
+        {lecturers.map(lecturer => (
+          <MenuItem key={lecturer.id} value={lecturer.id}>
+            {lecturer.firstName} {lecturer.lastName} {lecturer.id}
+          </MenuItem>
+        ))}
+      </Select>
+
+      {currentLecturer && currentCourse ? (
+        <Button
+          variant='contained'
+          size='large'
+          disabled={!currentLecturer || !currentCourse}
+          onClick={() => {
+            handleAddCourseToLecturer(currentLecturer, currentCourse as number);
+          }}
+        >
+          Add Course To Lecturer
+        </Button>
+      ) : null}
+      {/* Preference Table ================================================*/}
       <PreferenceTable votes={votes} />
       <Fab
         color='primary'
         aria-label='add'
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={handleAddOpen}
+        onClick={handleAddGroupOpen}
       >
         <AddIcon />
       </Fab>
 
       {/* Add/Edit Dialog */}
       <Dialog
-        open={editDialogOpen || addDialogOpen}
+        open={editGroupDialogOpen || addGroupDialogOpen}
         onClose={() =>
-          editDialogOpen ? setEditDialogOpen(false) : setAddDialogOpen(false)
+          editGroupDialogOpen
+            ? setEditGroupDialogOpen(false)
+            : setAddGroupDialogOpen(false)
         }
       >
-        <DialogTitle>{editDialogOpen ? 'Edit Group' : 'Add Group'}</DialogTitle>
+        <DialogTitle>
+          {editGroupDialogOpen ? 'Edit Group' : 'Add Group'}
+        </DialogTitle>
         <DialogContent>
           <TextField
             label='Name'
             value={(() => {
-              if (editDialogOpen) {
+              if (editGroupDialogOpen) {
                 return currentGroupId
                   ? editedGroups.find(g => g.id === currentGroupId)?.name || ''
                   : 'xd';
@@ -371,7 +437,7 @@ export const Planner = () => {
               }
             })()}
             onChange={e => {
-              if (editDialogOpen) {
+              if (editGroupDialogOpen) {
                 setCurrentGroup(prev => ({
                   ...prev,
                   name: e.target.value,
@@ -437,22 +503,22 @@ export const Planner = () => {
         <DialogActions>
           <Button
             onClick={() =>
-              editDialogOpen
-                ? setEditDialogOpen(false)
-                : setAddDialogOpen(false)
+              editGroupDialogOpen
+                ? setEditGroupDialogOpen(false)
+                : setAddGroupDialogOpen(false)
             }
           >
             Cancel
           </Button>
           <Button
             onClick={() =>
-              editDialogOpen
-                ? handleEditConfirm(currentGroupId ?? -1)
-                : handleAddConfirm()
+              editGroupDialogOpen
+                ? handleEditGroupConfirm(currentGroupId ?? -1)
+                : handleAddGroupConfirm()
             }
             color='primary'
           >
-            {editDialogOpen ? 'Save' : 'Add'}
+            {editGroupDialogOpen ? 'Save' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -485,7 +551,7 @@ export const Planner = () => {
               </TableCell>
               {currentUser?.userRole === 'ADMIN' ? (
                 <TableCell>
-                  <IconButton onClick={() => handleEditOpen(group.id)}>
+                  <IconButton onClick={() => handleEditGroupOpen(group.id)}>
                     <EditIcon />
                   </IconButton>
                 </TableCell>

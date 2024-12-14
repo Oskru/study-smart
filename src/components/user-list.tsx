@@ -16,6 +16,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchUsers, deleteUser, User } from '../hooks/api/use-users.ts';
 import { useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
 
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -24,7 +25,7 @@ const UserList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers().then((data) => {
+    fetchUsers().then(data => {
       setUsers(data);
       setFilteredUsers(data);
     });
@@ -33,8 +34,8 @@ const UserList = () => {
   const handleDeleteUser = async (id: number) => {
     deleteUser(id)
       .then(() => {
-        setUsers((prev) => prev.filter((user) => user.id !== id));
-        setFilteredUsers((prev) => prev.filter((user) => user.id !== id));
+        setUsers(prev => prev.filter(user => user.id !== id));
+        setFilteredUsers(prev => prev.filter(user => user.id !== id));
       })
       .catch(() => alert('Failed to delete user!'));
   };
@@ -44,23 +45,23 @@ const UserList = () => {
     if (role === '') {
       setFilteredUsers(users);
     } else {
-      setFilteredUsers(users.filter((user) => user.role === role));
+      setFilteredUsers(users.filter(user => user.role === role));
     }
   };
 
   return (
-    <AppContainer title="Lista użytkowników">
+    <Box display={'flex'} flexDirection='column' gap={2}>
       <FormControl fullWidth sx={{ marginBottom: 2 }}>
         <InputLabel>Filtruj według roli</InputLabel>
         <Select
           value={selectedRole}
-          onChange={(e) => handleRoleFilterChange(e.target.value)}
+          onChange={e => handleRoleFilterChange(e.target.value)}
         >
-          <MenuItem value="">Wszystkie</MenuItem>
-          <MenuItem value="ADMIN">Admin</MenuItem>
-          <MenuItem value="PLANNER">Planner</MenuItem>
-          <MenuItem value="STUDENT">Student</MenuItem>
-          <MenuItem value="LECTURER">Lecturer</MenuItem>
+          <MenuItem value=''>Wszystkie</MenuItem>
+          <MenuItem value='ADMIN'>Admin</MenuItem>
+          <MenuItem value='PLANNER'>Planner</MenuItem>
+          <MenuItem value='STUDENT'>Student</MenuItem>
+          <MenuItem value='LECTURER'>Lecturer</MenuItem>
         </Select>
       </FormControl>
 
@@ -75,7 +76,7 @@ const UserList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {filteredUsers.map((user) => (
+          {filteredUsers.map(user => (
             <TableRow key={user.id}>
               <TableCell>{user.firstName}</TableCell>
               <TableCell>{user.lastName}</TableCell>
@@ -90,7 +91,7 @@ const UserList = () => {
           ))}
         </TableBody>
       </Table>
-    </AppContainer>
+    </Box>
   );
 };
 

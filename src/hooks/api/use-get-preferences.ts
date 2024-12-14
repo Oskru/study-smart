@@ -4,22 +4,24 @@ import { PREFERENCES_URL } from '../../utils/consts/api.ts';
 import Omit = util.Omit;
 import Preferences from '../../components/preferences.tsx';
 
+const dayNameSchema = z.enum([
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+]);
+
 const preferenceSchema = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   dayId: z.number(),
-  dayName: z.enum([
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ]),
+  dayName: dayNameSchema,
   times: z.array(z.string()),
-  timeRanges: z.array(z.string()),
+  timeRanges: z.array(z.array(z.string())),
   studentId: z.number(),
-  courseId: z.number(), // do wyrzucenia?
+  courseId: z.number(),
 });
 
 const preferencesSchema = z.union([
@@ -29,6 +31,7 @@ const preferencesSchema = z.union([
 
 export type Preference = z.infer<typeof preferenceSchema>;
 export type Preferences = z.infer<typeof preferencesSchema>;
+export type DayNames = z.infer<typeof dayNameSchema>;
 
 export const fetchPreferences = async (): Promise<Preferences> => {
   const response = await apiInstance.get<Preference[]>(PREFERENCES_URL);
@@ -36,7 +39,7 @@ export const fetchPreferences = async (): Promise<Preferences> => {
   return response.data;
 };
 
-export const postPreference = async (preference: Omit<Preference, 'id'>) => {
+export const postPreference = async (preference: Omit<Preference, 'id'>[]) => {
   await apiInstance.post<Preferences>(PREFERENCES_URL, preference);
 };
 

@@ -83,6 +83,7 @@ const StyledTd = styled.td<{ votes: number }>`
   font-size: 15px;
   font-weight: bold;
   border: 1px solid #ddd;
+  padding: 0px;
 `;
 
 const hours = [
@@ -251,16 +252,9 @@ export const Planner = () => {
 
     try {
       await editGroup(id, groupToEdit as Group);
-
+      const groups = await fetchGroups();
       // Zaktualizowanie stanu `groups` po pomyślnej edycji
-      setGroups(prevGroups =>
-        prevGroups.map(
-          group =>
-            group.id === id
-              ? { ...group, ...groupToEdit } // Aktualizacja grupy w stanie
-              : group // Pozostałe grupy bez zmian
-        )
-      );
+      setGroups(groups);
     } catch (error) {
       alert(`Error while updating group: ${error}`);
     }

@@ -25,6 +25,7 @@ import { useUser } from '../hooks/use-user.ts';
 import styled from '@emotion/styled';
 import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
 import {
+  fetchPreferences,
   fetchPreferencesByIds,
   Preference,
 } from '../hooks/api/use-get-preferences.ts';
@@ -106,7 +107,7 @@ const hours = [
   '23:00',
 ];
 
-const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 type Votes = {
   [key: string]: number; // Klucz: "Dzień-Godzina", wartość: liczba głosów
@@ -155,6 +156,7 @@ export default PreferenceTable;
 export const Planner = () => {
   const [votes, setVotes] = useState<Votes>({});
   const [students, setStudents] = useState<Student[] | []>([]);
+  const [preferences, setPreferences] = useState<Preference[] | []>([]);
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
   const { user: currentUser } = useUser();
@@ -264,37 +266,19 @@ export const Planner = () => {
       setVotes({}); // Wyczyszczenie głosów
       console.log('myGroup:', myGroup);
 
-      // Pobierz wszystkich studentów równolegle
-      const studentsPromises = myGroup.studentIdList.map(studentId =>
-        fetchStudentsByIds([studentId])
+      const filteredStudents = students.filter(student =>
+        myGroup.studentIdList.includes(student.id)
       );
-
-      const studentsResults = await Promise.all(studentsPromises);
-
-      // Iteruj po każdym zestawie studentów i ich preferencjach
-      await Promise.all(
-        studentsResults.flat().map(async student => {
-          console.log('students:', student);
-
-          // Pobierz preferencje studenta równolegle
-          const preferencesPromises = student.preferenceIdList.map(prefId =>
-            fetchPreferencesByIds([prefId])
-          );
-
-          const preferencesResults = await Promise.all(preferencesPromises);
-          console.log(preferencesResults);
-          // Iteruj po preferencjach studenta i dodaj głosy
-          preferencesResults.flat().forEach(pref => {
-            for (
-              let hour = Number(pref.startTime.split(':')[0]);
-              hour <= Number(pref.endTime.split(':')[0]);
-              hour++
-            ) {
-              addVote(pref.dayOfWeek, moment(hour, 'HH').format('HH:mm'));
-            }
+      filteredStudents.forEach(student => {
+        const studentPreferences = preferences.filter(preference =>
+          student.preferenceIdList.includes(preference.id)
+        );
+        studentPreferences.forEach(preference => {
+          preference.times.forEach(time => {
+            addVote(preference.dayName, time);
           });
-        })
-      );
+        });
+      });
     } catch (error) {
       alert(`Error: ${error}`);
     }
@@ -315,6 +299,9 @@ export const Planner = () => {
     });
     fetchStudents().then(data => {
       setStudents(data);
+    });
+    fetchPreferences().then(data => {
+      setPreferences(data);
     });
   }, []);
 

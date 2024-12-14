@@ -5,7 +5,7 @@ import Omit = util.Omit;
 import Preferences from '../../components/preferences.tsx';
 
 const preferenceSchema = z.object({
-  id: z.number().nullable(),
+  id: z.number(),
   dayId: z.number(),
   dayName: z.enum([
     'Monday',

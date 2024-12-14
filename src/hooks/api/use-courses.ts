@@ -13,10 +13,13 @@ export const courseSchema = z.object({
   lecturerId: z.number(),
 });
 
-export type Course = z.infer<typeof courseSchema>;
+const coursesSchema = z.union([z.array(courseSchema), z.array(z.any())]);
 
-export const fetchCourses = async (): Promise<Course[] | []> => {
-  const response = await apiInstance.get<Course[] | []>(COURSES_URL);
+export type Course = z.infer<typeof courseSchema>;
+export type Courses = z.infer<typeof coursesSchema>;
+
+export const fetchCourses = async (): Promise<Courses> => {
+  const response = await apiInstance.get<Courses>(COURSES_URL);
 
   return response.data;
 };

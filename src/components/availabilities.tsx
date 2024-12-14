@@ -135,17 +135,17 @@ function Availabilities() {
           Availabilities for {dayOfWeek || '...'}
         </Typography>
         {filteredAvailabilities.length > 0 ? (
-          filteredAvailabilities.map(preference => (
-            <TimeSlot key={preference.id} elevation={3}>
+          filteredAvailabilities.map(availability => (
+            <TimeSlot key={availability.id} elevation={3}>
               <Typography variant='body1'>
-                {`${preference.times[0]} - ${preference.times[preference.times.length - 1]}`}
+                {`${availability.times[0]} - ${availability.times[availability.times.length - 1]}`}
               </Typography>
               <Typography variant='caption'>
-                {`${preference.dayName} ${courses.find(course => course.id === preference.courseId)?.name}`}
+                {`${availability.dayName}`}
               </Typography>
               <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                 <IconButton
-                  onClick={() => handleDeleteAvailability(preference)}
+                  onClick={() => handleDeleteAvailability(availability)}
                   size='small'
                 >
                   <DeleteIcon fontSize='small' />

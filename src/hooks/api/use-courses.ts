@@ -2,7 +2,7 @@ import { apiInstance } from '../../utils/api-instance.ts';
 import { COURSES_URL, USERS_URL } from '../../utils/consts/api.ts';
 import { z } from 'zod';
 
-const courseSchema = z.object({
+export const courseSchema = z.object({
   id: z.number(),
   name: z.string(),
   scheduled: z.boolean(),

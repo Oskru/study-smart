@@ -4,6 +4,7 @@ export const REGISTER_URL = `/auth/register`;
 export const PREFERENCES_URL = `/preferences`;
 export const COURSES_URL = `/courses`;
 export const STUDENTS_URL = `/students`;
+export const LECTURERS_URL = `/lecturers`;
 export const AVAILABILITIES_URL = `/availabilities`;
 export const GROUPS_URL = `/groups`;
 export const USERS_URL = `/users`;

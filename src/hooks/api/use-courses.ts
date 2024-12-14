@@ -5,12 +5,10 @@ import { z } from 'zod';
 export const courseSchema = z.object({
   id: z.number(),
   name: z.string(),
-  scheduled: z.boolean(),
+  description: z.string(),
   courseDuration: z.number(),
-  startTime: z.string(),
-  endTime: z.string(),
-  groupsIdList: z.array(z.number()),
   lecturerId: z.number(),
+  scheduled: z.boolean(),
 });
 
 export type Course = z.infer<typeof courseSchema>;

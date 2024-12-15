@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import AppContainer from './app-container.tsx';
+import { useState } from 'react';
 import { Box, TextField, Button } from '@mui/material';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { apiInstance } from '../utils/api-instance.ts';
 

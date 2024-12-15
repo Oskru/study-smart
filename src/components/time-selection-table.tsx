@@ -101,22 +101,6 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
     return s;
   }, [pastSelections]);
 
-  // Base color function
-  const getBaseColor = (day: string, hour: string) => {
-    const key = `${day}-${hour}`;
-    const past = pastSet.has(key);
-    if (isLecturer) {
-      // Lecturer mode
-      if (past) return 'orange';
-      return 'none';
-    } else {
-      // Student mode
-      if (past) return 'orange';
-      if (isHourInSchedule(day, hour)) return 'green';
-      return 'none';
-    }
-  };
-
   // selectedCells: { [day]: string[] } to store which hours are currently selected (blue)
   const [selectedCells, setSelectedCells] = useState<Record<string, string[]>>(
     {}
@@ -152,7 +136,6 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
   };
 
   const handleCellClick = (day: string, hour: string) => {
-    const baseColor = getBaseColor(day, hour);
     const key = `${day}-${hour}`;
     const inSchedule = isHourInSchedule(day, hour);
     const past = pastSet.has(key);
@@ -163,13 +146,13 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
     setSelectedCells(prev => {
       const currentSelection = prev[day] || [];
       if (currentSelection.includes(hour)) {
-        // Deselect: revert to base color
+        // Deselect
         const newSelection = currentSelection.filter(h => h !== hour);
         const updated = { ...prev, [day]: newSelection };
         if (newSelection.length === 0) delete updated[day];
         return updated;
       } else {
-        // Select: turn it blue
+        // Select
         const newSelection = [...currentSelection, hour].sort();
         return { ...prev, [day]: newSelection };
       }
@@ -182,8 +165,11 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
         const daySchedule = scheduleByDay[day];
         const sortedTimes = [...selectedCells[day]].sort();
         const timeRanges = buildTimeRangesFromSortedTimes(sortedTimes);
+
+        // If daySchedule is not found or dayId is missing, fallback to index-based dayId
+        const fallbackDayId = days.indexOf(day) + 1;
         return {
-          iden: daySchedule?.dayId || 0,
+          iden: daySchedule?.dayId ?? fallbackDayId,
           dayName: day,
           times: sortedTimes,
           timeRanges,
@@ -222,6 +208,21 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
       }
     }
     return true;
+  };
+
+  const getBaseColor = (day: string, hour: string) => {
+    const key = `${day}-${hour}`;
+    const past = pastSet.has(key);
+    if (isLecturer) {
+      // Lecturer mode
+      if (past) return 'orange';
+      return 'none';
+    } else {
+      // Student mode
+      if (past) return 'orange';
+      if (isHourInSchedule(day, hour)) return 'green';
+      return 'none';
+    }
   };
 
   const tableWrapperStyle = {

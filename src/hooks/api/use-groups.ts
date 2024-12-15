@@ -6,6 +6,7 @@ const groupSchema = z.object({
   id: z.number(),
   name: z.string(),
   studentIdList: z.array(z.number()),
+  courseIdList: z.array(z.number()),
 });
 
 const groupsSchema = z.union([z.array(groupSchema), z.array(z.any())]);

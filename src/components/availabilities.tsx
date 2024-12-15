@@ -1,130 +1,128 @@
-import { useState, useEffect, useMemo } from 'react';
-import Typography from '@mui/material/Typography';
+import { useState, useMemo } from 'react';
 import AppContainer from './app-container.tsx';
-import { Box, Button, Switch, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Button,
+  Switch,
+  FormControlLabel,
+  Typography,
+} from '@mui/material';
 import { useUser } from '../hooks/use-user.ts';
-import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
-import { SelectedDataProps } from '@marinos33/react-week-time-range-picker';
+import { DaySchedule, TimeSelectionTable } from './time-selection-table.tsx';
 import {
-  Availabilities as AvailabilitiesType,
-  Availability,
-  fetchAvailabilities,
-  postAvailability,
-  deleteAvailability,
-} from '../hooks/api/use-availabilities.ts';
-import {
-  DaySchedule,
-  PastSelection,
-  TimeSelectionTable,
-} from './time-selection-table.tsx';
+  useAvailabilitiesQuery,
+  usePostAvailabilityMutation,
+  useDeleteAvailabilityMutation,
+} from '../hooks/api/use-availabilities';
+import { useCoursesQuery } from '../hooks/api/use-courses';
 import { useSnackbar } from 'notistack';
+import { WeekDayName } from '../hooks/api/use-preferences.ts';
 
-function Availabilities() {
+interface SelectedDataProps {
+  iden: number;
+  dayName: string;
+  times: string[];
+  timeRanges: [string, string][];
+}
+
+const Availabilities = () => {
   const { user } = useUser();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [courses, setCourses] = useState<Course[]>([]);
+  const {
+    data: availabilitiesData = [],
+    isLoading: isAvailabilitiesDataLoading,
+  } = useAvailabilitiesQuery();
+  const { data: coursesData = [], isLoading: isCoursesDataLoading } =
+    useCoursesQuery();
+
   const [availabilities, setAvailabilities] = useState<
     SelectedDataProps[] | undefined
   >(undefined);
-  const [availabilitiesResponse, setAvailabilitiesResponse] =
-    useState<AvailabilitiesType>([]);
-  const [pastAvailabilities, setPastAvailabilities] = useState<PastSelection[]>(
-    []
-  );
-  const [dataLoading, setDataLoading] = useState(true);
-
   const [mode, setMode] = useState<'add' | 'delete'>('add');
   const [selectedForDeletion, setSelectedForDeletion] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (!user) return;
-    setDataLoading(true);
-    Promise.all([fetchAvailabilities(), fetchCourses()])
-      .then(([availData, courseData]) => {
-        setAvailabilitiesResponse(availData);
-        setCourses(courseData);
-        const userPastSelections: PastSelection[] = availData
-          .filter(pref => pref.lecturerId === user.id)
-          .map(pref => ({
-            dayName: pref.dayName,
-            times: pref.times,
-          }));
-        setPastAvailabilities(userPastSelections);
-      })
-      .finally(() => setDataLoading(false));
-  }, [user]);
+  // Past availabilities
+  const pastAvailabilities = availabilitiesData
+    .filter(a => a.lecturerId === user?.id)
+    .map(a => ({ dayName: a.dayName, times: a.times }));
 
-  const minSelections = useMemo(() => {
-    return courses.reduce((sum, c) => sum + c.courseDuration, 0);
-  }, [courses]);
+  const lecturerCourses = coursesData.filter(c => c.lecturerId === user?.id);
+  const minSelections = lecturerCourses.reduce(
+    (sum, c) => sum + c.courseDuration,
+    0
+  );
 
-  const currentlySelected = useMemo(() => {
-    if (!availabilities) return 0;
-    return availabilities.reduce((sum, p) => sum + p.times.length, 0);
-  }, [availabilities]);
+  const pastCount = pastAvailabilities.reduce(
+    (sum, p) => sum + p.times.length,
+    0
+  );
+  const newCount = (availabilities || []).reduce(
+    (sum, p) => sum + p.times.length,
+    0
+  );
+  const currentlySelected = pastCount + newCount;
 
+  const postAvailabilityMutation = usePostAvailabilityMutation();
+  const deleteAvailabilityMutation = useDeleteAvailabilityMutation();
+
+  // Build deletionMap for delete mode: map each dayName-hour to {id, allTimes} of an availability
   const deletionMap = useMemo(() => {
     const map: Record<string, { id: number; allTimes: string[] }> = {};
-    availabilitiesResponse.forEach(a => {
-      const { id, dayName, times } = a;
-      if (id == null) return;
-      times.forEach(t => {
-        const key = `${dayName}-${t}`;
-        map[key] = { id, allTimes: times };
+    availabilitiesData
+      .filter(a => a.lecturerId === user?.id)
+      .forEach(a => {
+        a.times.forEach(t => {
+          const key = `${a.dayName}-${t}`;
+          map[key] = { id: a.id, allTimes: a.times };
+        });
       });
-    });
     return map;
-  }, [availabilitiesResponse]);
-
-  const onDeleteSelectionChange = (ids: number[]) => {
-    setSelectedForDeletion(ids);
-  };
+  }, [availabilitiesData, user]);
 
   const handleSendAvailabilities = () => {
     if (!availabilities || !user) return;
     if (currentlySelected < minSelections) return;
 
-    const toSend: Availability[] = availabilities.map(availability => ({
-      dayId: Number(availability.iden),
-      dayName: availability.dayName as Availability['dayName'],
-      timeRanges: availability.timeRanges,
-      times: availability.times,
+    const toSend = availabilities.map(a => ({
+      dayId: Number(a.iden),
+      dayName: a.dayName as WeekDayName,
+      timeRanges: a.timeRanges,
+      times: a.times,
       lecturerId: Number(user.id),
     }));
 
-    postAvailability(toSend)
-      .then(() => fetchAvailabilities())
-      .then(availData => {
-        setAvailabilitiesResponse(availData);
+    postAvailabilityMutation.mutate(toSend, {
+      onSuccess: () => {
         setAvailabilities(undefined);
         enqueueSnackbar('Availabilities sent successfully!', {
           variant: 'success',
         });
-      })
-      .catch(err => {
-        enqueueSnackbar(`Error sending availabilities: ${err}`, {
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(`Error sending availabilities: ${error}`, {
           variant: 'error',
         });
-      });
+      },
+    });
   };
 
   const handleDelete = () => {
-    const deletes = selectedForDeletion.map(id => deleteAvailability(id));
-    Promise.all(deletes)
-      .then(() => fetchAvailabilities())
-      .then(availData => {
-        setAvailabilitiesResponse(availData);
-        setSelectedForDeletion([]);
-        enqueueSnackbar('Availabilities deleted successfully!', {
-          variant: 'success',
-        });
-      })
-      .catch(error => {
-        enqueueSnackbar(`Error deleting availabilities: ${error}`, {
-          variant: 'error',
-        });
+    selectedForDeletion.forEach(id => {
+      deleteAvailabilityMutation.mutate(id, {
+        onSuccess: () => {
+          setSelectedForDeletion(prev => prev.filter(x => x !== id));
+          enqueueSnackbar('Availabilities deleted successfully!', {
+            variant: 'success',
+          });
+        },
+        onError: (error: any) => {
+          enqueueSnackbar(`Error deleting availabilities: ${error}`, {
+            variant: 'error',
+          });
+        },
       });
+    });
   };
 
   return (
@@ -153,12 +151,18 @@ function Availabilities() {
             }
           }}
           pastSelections={pastAvailabilities}
-          loading={dataLoading}
+          loading={
+            postAvailabilityMutation.isLoading ||
+            deleteAvailabilityMutation.isLoading ||
+            isAvailabilitiesDataLoading ||
+            isCoursesDataLoading
+          }
           isLecturer={true}
           mode={mode}
+          scheduleData={availabilitiesData as DaySchedule[]}
           deletionMap={deletionMap}
           selectedForDeletion={selectedForDeletion}
-          onDeleteSelectionChange={onDeleteSelectionChange}
+          onDeleteSelectionChange={ids => setSelectedForDeletion(ids)}
         />
         {mode === 'add' &&
           availabilities &&
@@ -185,6 +189,6 @@ function Availabilities() {
       </Box>
     </AppContainer>
   );
-}
+};
 
 export default Availabilities;

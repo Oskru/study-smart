@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import AppContainer from './app-container.tsx';
 import {
   Table,
@@ -7,55 +7,54 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Button,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  Box,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { fetchUsers, deleteUser, User } from '../hooks/api/use-users.ts';
-import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
+import { useUsersQuery, useDeleteUserMutation } from '../hooks/api/use-users';
+import { useSnackbar } from 'notistack';
 
 const UserList = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const { enqueueSnackbar } = useSnackbar();
+  const { data: users = [] } = useUsersQuery(); // fetch all users
+  const deleteUserMutation = useDeleteUserMutation();
+
   const [selectedRole, setSelectedRole] = useState<string>('');
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUsers().then(data => {
-      setUsers(data);
-      setFilteredUsers(data);
+  const filteredUsers =
+    selectedRole === ''
+      ? users
+      : users.filter(user => user.role === selectedRole);
+
+  const handleDeleteUser = (id: number) => {
+    deleteUserMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar('User deleted successfully!', { variant: 'success' });
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(`Failed to delete user: ${error}`, {
+          variant: 'error',
+        });
+      },
     });
-  }, []);
-
-  const handleDeleteUser = async (id: number) => {
-    deleteUser(id)
-      .then(() => {
-        setUsers(prev => prev.filter(user => user.id !== id));
-        setFilteredUsers(prev => prev.filter(user => user.id !== id));
-      })
-      .catch(() => alert('Failed to delete user!'));
-  };
-
-  const handleRoleFilterChange = (role: string) => {
-    setSelectedRole(role);
-    if (role === '') {
-      setFilteredUsers(users);
-    } else {
-      setFilteredUsers(users.filter(user => user.role === role));
-    }
   };
 
   return (
-    <Box display={'flex'} flexDirection='column' gap={2}>
+    <Box
+      display={'flex'}
+      flexDirection='column'
+      gap={2}
+      component={AppContainer}
+      title='User List'
+    >
       <FormControl fullWidth sx={{ marginBottom: 2 }}>
         <InputLabel>Filtruj według roli</InputLabel>
         <Select
           value={selectedRole}
-          onChange={e => handleRoleFilterChange(e.target.value)}
+          onChange={e => setSelectedRole(e.target.value)}
         >
           <MenuItem value=''>Wszystkie</MenuItem>
           <MenuItem value='ADMIN'>Admin</MenuItem>

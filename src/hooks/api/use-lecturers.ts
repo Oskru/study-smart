@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { apiInstance } from '../../utils/api-instance.ts';
-import { LECTURERS_URL } from '../../utils/consts/api.ts';
-import { courseSchema } from './use-courses.ts';
-import { availabilitySchema } from './use-availabilities.ts';
+import { apiInstance } from '../../utils/api-instance';
+import { LECTURERS_URL } from '../../utils/consts/api';
+import { courseSchema } from './use-courses';
+import { availabilitySchema } from './use-availabilities';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const lecturerSchema = z.object({
   id: z.number(),
@@ -22,28 +23,43 @@ const lecturerSchema = z.object({
 
 export type Lecturer = z.infer<typeof lecturerSchema>;
 
-export const fetchLecturers = async (): Promise<Lecturer[] | []> => {
-  const response = await apiInstance.get<Lecturer[] | []>(LECTURERS_URL);
-
+const fetchLecturers = async (): Promise<Lecturer[]> => {
+  const response = await apiInstance.get<Lecturer[]>(LECTURERS_URL);
   return response.data;
 };
 
-export const putAddCourseToLecturer = async (
-  lecturerId: number,
-  courseId: number
-) => {
+const putAddCourseToLecturer = async (lecturerId: number, courseId: number) => {
   await apiInstance.put(
     `${LECTURERS_URL}/${lecturerId}/add-course/${courseId}`
   );
 };
 
-export const fetchLecturerById = async (
-  lecturerId: number
-): Promise<Lecturer[]> => {
-  const lecturer = await fetchLecturers();
-  return lecturer.filter(lecturer => lecturerId === lecturer.id);
+const deleteLecturer = async (id: number) => {
+  await apiInstance.delete(`${LECTURERS_URL}/${id}`);
 };
 
-export const deleteLecturer = async (id: number) => {
-  await apiInstance.delete<Lecturer[] | []>(`${LECTURERS_URL}/${id}`);
+export const useLecturersQuery = () => {
+  return useQuery(['lecturers'], fetchLecturers);
+};
+
+export const usePutAddCourseToLecturerMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(
+    ({ lecturerId, courseId }: { lecturerId: number; courseId: number }) =>
+      putAddCourseToLecturer(lecturerId, courseId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['lecturers']);
+      },
+    }
+  );
+};
+
+export const useDeleteLecturerMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(deleteLecturer, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['lecturers']);
+    },
+  });
 };

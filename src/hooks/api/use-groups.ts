@@ -1,6 +1,7 @@
-import { apiInstance } from '../../utils/api-instance.ts';
-import { GROUPS_URL } from '../../utils/consts/api.ts';
 import { z } from 'zod';
+import { apiInstance } from '../../utils/api-instance';
+import { GROUPS_URL } from '../../utils/consts/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const groupSchema = z.object({
   id: z.number(),
@@ -9,38 +10,70 @@ const groupSchema = z.object({
   courseIdList: z.array(z.number()),
 });
 
-const groupsSchema = z.union([z.array(groupSchema), z.array(z.any())]);
-
 export type Group = z.infer<typeof groupSchema>;
-export type Groups = z.infer<typeof groupsSchema>;
+export type Groups = Group[];
 
-export const fetchGroups = async (): Promise<Groups> => {
+const fetchGroups = async (): Promise<Groups> => {
   const response = await apiInstance.get<Groups>(GROUPS_URL);
-
   return response.data;
 };
 
-export const fetchGroupById = async (id: number): Promise<Group> => {
+const fetchGroupById = async (id: number): Promise<Group> => {
   const response = await apiInstance.get<Group>(`${GROUPS_URL}/${id}`);
   return response.data;
 };
 
-export const postGroup = async (
-  group: Omit<Group, 'id'>
-): Promise<Group[] | []> => {
+const postGroup = async (group: Omit<Group, 'id'>) => {
   const response = await apiInstance.post<Group[] | []>(GROUPS_URL, group);
   return response.data;
 };
 
-export const editGroup = async (
-  id: number,
-  data: Partial<Group>
-): Promise<Group> => {
-  // Wyślij żądanie do API, np.:
+const editGroup = async (id: number, data: Partial<Group>) => {
   const response = await apiInstance.put<Group>(`${GROUPS_URL}/${id}`, data);
   return response.data;
 };
 
-export const deleteGroup = async (id: number) => {
-  await apiInstance.delete<Group[] | []>(`${GROUPS_URL}/${id}`);
+const deleteGroup = async (id: number) => {
+  await apiInstance.delete(`${GROUPS_URL}/${id}`);
+};
+
+// Queries & Mutations
+export const useGroupsQuery = () => {
+  return useQuery(['groups'], fetchGroups);
+};
+
+export const useGroupByIdQuery = (id: number) => {
+  return useQuery(['groups', id], () => fetchGroupById(id), {
+    enabled: !!id,
+  });
+};
+
+export const usePostGroupMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(postGroup, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['groups']);
+    },
+  });
+};
+
+export const useEditGroupMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(
+    ({ id, data }: { id: number; data: Partial<Group> }) => editGroup(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['groups']);
+      },
+    }
+  );
+};
+
+export const useDeleteGroupMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(deleteGroup, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['groups']);
+    },
+  });
 };

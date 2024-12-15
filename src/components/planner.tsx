@@ -20,115 +20,121 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { LegacyRef, useEffect, useRef, useState } from 'react';
 import { useUser } from '../hooks/use-user.ts';
-import { Course, fetchCourses } from '../hooks/api/use-courses.ts';
-import {
-  fetchPreferences,
-  Preference,
-} from '../hooks/api/use-get-preferences.ts';
-import {
-  deleteGroup,
-  editGroup,
-  fetchGroupById,
-  fetchGroups,
-  Group,
-  Groups,
-  postGroup,
-} from '../hooks/api/use-groups.ts';
-import { fetchStudents, Student } from '../hooks/api/use-students.ts';
+import { useState, useRef } from 'react';
 import Multiselect from 'multiselect-react-dropdown';
+import { useCoursesQuery } from '../hooks/api/use-courses';
 import {
-  fetchLecturers,
-  Lecturer,
-  putAddCourseToLecturer,
-} from '../hooks/api/use-lecturers.ts';
-import { PreferenceVotesTable } from './preference-votes-table.tsx'; // Import from above code
-import { useTheme } from '@mui/material/styles';
+  useGroupsQuery,
+  usePostGroupMutation,
+  useEditGroupMutation,
+  useDeleteGroupMutation,
+} from '../hooks/api/use-groups';
+import { useStudentsQuery } from '../hooks/api/use-students';
+import {
+  useLecturersQuery,
+  usePutAddCourseToLecturerMutation,
+} from '../hooks/api/use-lecturers';
+import { usePreferencesQuery } from '../hooks/api/use-preferences';
+import { useSnackbar } from 'notistack';
+import { PreferenceVotesTable } from './preference-votes-table.tsx';
 
 type Votes = { [key: string]: number };
 
 export const Planner = () => {
-  const theme = useTheme();
-  const [votes, setVotes] = useState<Votes>({});
-  const [students, setStudents] = useState<Student[] | []>([]);
-  const [preferences, setPreferences] = useState<Preference[] | []>([]);
-  const [courses, setCourses] = useState<Course[] | []>([]);
-  const [currentLecturer, setCurrentLecturer] = useState<Lecturer['id'] | null>(
-    null
-  );
-  const [lecturers, setLecturers] = useState<Lecturer[] | []>([]);
-  const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
   const { user: currentUser } = useUser();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const selectedItems = useRef();
+  const { data: coursesData = [] } = useCoursesQuery();
+  const { data: groupsData = [] } = useGroupsQuery();
+  const { data: studentsData = [] } = useStudentsQuery();
+  const { data: lecturersData = [] } = useLecturersQuery();
+  const { data: preferencesData = [] } = usePreferencesQuery();
 
+  const [votes, setVotes] = useState<Votes>({});
+  const [currentLecturer, setCurrentLecturer] = useState<number | null>(null);
+  const [currentCourse, setCurrentCourse] = useState<number | null>(null);
+
+  const selectedItems = useRef<any>();
+
+  // group dialog states
   const [editGroupDialogOpen, setEditGroupDialogOpen] = useState(false);
   const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
-  const [groups, setGroups] = useState<Groups>([]);
-  const [editedGroups, setEditedGroups] = useState<Groups>([]);
-  const [currentGroup, setCurrentGroup] = useState<Omit<Group, 'id'> | null>(
-    null
-  );
-  const [currentGroupId, setCurrentGroupId] = useState<Group['id'] | null>(
-    null
-  );
+  const [currentGroup, setCurrentGroup] = useState<{
+    name: string;
+    studentIdList: number[];
+  } | null>(null);
+  const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
 
+  // Mutations
+  const postGroupMutation = usePostGroupMutation();
+  const editGroupMutation = useEditGroupMutation();
+  const deleteGroupMutation = useDeleteGroupMutation();
+  const addCourseToLecturerMutation = usePutAddCourseToLecturerMutation();
+
+  // Methods
   const handleAddGroupOpen = () => {
     setCurrentGroup({ name: '', studentIdList: [] });
     setAddGroupDialogOpen(true);
   };
 
-  const handleEditGroupOpen = async (id: number) => {
-    setEditedGroups(groups);
+  const handleEditGroupOpen = (id: number) => {
+    const grp = groupsData.find(g => g.id === id);
+    if (!grp) return;
     setCurrentGroupId(id);
-    setCurrentGroup(editedGroups.find(group => group.id === id));
+    setCurrentGroup({ name: grp.name, studentIdList: grp.studentIdList });
     setEditGroupDialogOpen(true);
   };
 
   const handleAddGroupConfirm = () => {
     setAddGroupDialogOpen(false);
-    const processedStudentIdList = currentGroup?.studentIdList
-      ? currentGroup.studentIdList.toString().split(',').map(Number)
-      : [];
-    const groupToPost = {
-      ...currentGroup,
-      studentIdList: processedStudentIdList,
-    };
-    postGroup(groupToPost as Group)
-      .then(() => {
-        setGroups(prev => [...prev, groupToPost]);
-      })
-      .catch(error => {
-        alert(`Error while posting group: ${error}`);
-      });
+    const processedStudentIdList = currentGroup?.studentIdList || [];
+    postGroupMutation.mutate(
+      { ...currentGroup!, studentIdList: processedStudentIdList },
+      {
+        onSuccess: () => {
+          enqueueSnackbar('Group added successfully!', { variant: 'success' });
+        },
+        onError: (error: any) => {
+          enqueueSnackbar(`Error while adding group: ${error}`, {
+            variant: 'error',
+          });
+        },
+      }
+    );
   };
 
-  const handleEditGroupConfirm = async (id: number) => {
+  const handleEditGroupConfirm = (id: number) => {
     setEditGroupDialogOpen(false);
 
     const processed = selectedItems.current
       ?.getSelectedItems()
       .map((student: any) => student.id);
 
-    const groupToEdit = {
-      ...editedGroups.find(group => group.id === id),
-      studentIdList: processed,
-    };
-
-    try {
-      await editGroup(id, groupToEdit as Group);
-      const newGroups = await fetchGroups();
-      setGroups(newGroups);
-    } catch (error) {
-      alert(`Error while updating group: ${error}`);
-    }
+    editGroupMutation.mutate(
+      { id, data: { studentIdList: processed, name: currentGroup?.name } },
+      {
+        onSuccess: () => {
+          enqueueSnackbar('Group edited successfully!', { variant: 'success' });
+        },
+        onError: (error: any) => {
+          enqueueSnackbar(`Error while editing group: ${error}`, {
+            variant: 'error',
+          });
+        },
+      }
+    );
   };
 
-  const handleDeleteGroup = async (id: number) => {
-    deleteGroup(id)
-      .then(() => setGroups(groups.filter(group => group.id !== id)))
-      .catch(() => alert('Failed to delete group!'));
+  const handleDeleteGroup = (id: number) => {
+    deleteGroupMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar('Group deleted successfully!', { variant: 'success' });
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(`Error deleting group: ${error}`, { variant: 'error' });
+      },
+    });
   };
 
   const addVote = (day: string, hour: string): void => {
@@ -140,54 +146,43 @@ export const Planner = () => {
   };
 
   const handleAddCourseToLecturer = (lecturerId: number, courseId: number) => {
-    putAddCourseToLecturer(lecturerId, courseId).catch(error => {
-      alert(`Error while adding course to lecturer: ${error}`);
-    });
+    addCourseToLecturerMutation.mutate(
+      { lecturerId, courseId },
+      {
+        onSuccess: () => {
+          enqueueSnackbar('Course added to lecturer successfully!', {
+            variant: 'success',
+          });
+        },
+        onError: (error: any) => {
+          enqueueSnackbar(`Error adding course to lecturer: ${error}`, {
+            variant: 'error',
+          });
+        },
+      }
+    );
   };
 
-  const handleGetPreferencesFromGroup = async (id: number) => {
-    try {
-      const myGroup = await fetchGroupById(id);
-      setVotes({});
-      const filteredStudents = students.filter(student =>
-        myGroup.studentIdList.includes(student.id)
+  const handleGetPreferencesFromGroup = (id: number) => {
+    setVotes({});
+    const myGroup = groupsData.find(g => g.id === id);
+    if (!myGroup) return;
+
+    const filteredStudents = studentsData.filter(student =>
+      myGroup.studentIdList.includes(student.id)
+    );
+
+    filteredStudents.forEach(student => {
+      const studentPreferences = preferencesData.filter(preference =>
+        student.preferenceIdList.includes(preference.id)
       );
-      filteredStudents.forEach(student => {
-        const studentPreferences = preferences.filter(preference =>
-          student.preferenceIdList.includes(preference.id)
-        );
-        studentPreferences.forEach(preference => {
-          preference.times.forEach(time => {
-            addVote(preference.dayName, time);
-          });
+      studentPreferences.forEach(preference => {
+        preference.times.forEach(time => {
+          addVote(preference.dayName, time);
         });
       });
-    } catch (error) {
-      alert(`Error: ${error}`);
-    }
+    });
   };
-
-  useEffect(() => {
-    fetchCourses().then(data => {
-      setCourses(data);
-      setCurrentCourse(data[0]?.id ?? null);
-    });
-    fetchGroups().then(data => {
-      setGroups(data);
-      setCurrentGroupId(data[0]?.id ?? null);
-      setCurrentGroup({ name: '', studentIdList: [] });
-    });
-    fetchStudents().then(data => {
-      setStudents(data);
-    });
-    fetchLecturers().then(data => {
-      setLecturers(data);
-      setCurrentLecturer(data[0]?.id ?? null);
-    });
-    fetchPreferences().then(data => {
-      setPreferences(data);
-    });
-  }, []);
 
   return (
     <AppContainer title='View your users'>
@@ -203,11 +198,8 @@ export const Planner = () => {
             handleGetPreferencesFromGroup(groupId);
           }}
           fullWidth
-          sx={{
-            marginBottom: theme.spacing(2),
-          }}
         >
-          {groups.map(group => (
+          {groupsData.map(group => (
             <MenuItem key={group.id} value={group.id}>
               {group.name}
             </MenuItem>
@@ -222,11 +214,8 @@ export const Planner = () => {
           value={currentCourse || ''}
           onChange={e => setCurrentCourse(e.target.value as number)}
           fullWidth
-          sx={{
-            marginBottom: theme.spacing(2),
-          }}
         >
-          {courses.map(course => (
+          {coursesData.map(course => (
             <MenuItem key={course.id} value={course.id}>
               {course.name}
             </MenuItem>
@@ -241,17 +230,15 @@ export const Planner = () => {
           value={currentLecturer || ''}
           onChange={e => setCurrentLecturer(e.target.value as number)}
           fullWidth
-          sx={{
-            marginBottom: theme.spacing(2),
-          }}
         >
-          {lecturers.map(lecturer => (
+          {lecturersData.map(lecturer => (
             <MenuItem key={lecturer.id} value={lecturer.id}>
               {lecturer.firstName} {lecturer.lastName}
             </MenuItem>
           ))}
         </Select>
       </div>
+
       {currentLecturer && currentCourse ? (
         <Button
           variant='contained'
@@ -260,13 +247,11 @@ export const Planner = () => {
           onClick={() => {
             handleAddCourseToLecturer(currentLecturer!, currentCourse!);
           }}
-          sx={{ marginBottom: theme.spacing(2) }}
         >
           Add Course To Lecturer
         </Button>
       ) : null}
 
-      {/* Preference Votes Table */}
       <PreferenceVotesTable votes={votes} />
 
       <Fab
@@ -292,37 +277,10 @@ export const Planner = () => {
         <DialogContent>
           <TextField
             label='Name'
-            value={(() => {
-              if (editGroupDialogOpen && currentGroupId) {
-                return (
-                  editedGroups.find(g => g.id === currentGroupId)?.name || ''
-                );
-              } else {
-                return currentGroup ? currentGroup.name : '';
-              }
-            })()}
-            onChange={e => {
-              if (editGroupDialogOpen) {
-                setCurrentGroup(prev => ({
-                  ...prev!,
-                  name: e.target.value,
-                  studentIdList: prev?.studentIdList || [],
-                }));
-                setEditedGroups(prevGroups =>
-                  prevGroups.map(group =>
-                    group.id === currentGroupId
-                      ? { ...group, name: e.target.value }
-                      : group
-                  )
-                );
-              } else {
-                setCurrentGroup(prev => ({
-                  ...prev!,
-                  name: e.target.value,
-                  studentIdList: prev?.studentIdList || [],
-                }));
-              }
-            }}
+            value={currentGroup?.name || ''}
+            onChange={e =>
+              setCurrentGroup(prev => ({ ...prev!, name: e.target.value }))
+            }
             fullWidth
             margin='dense'
           />
@@ -338,27 +296,27 @@ export const Planner = () => {
               multiselectContainer: { height: '500px' },
               option: { color: 'blue' },
             }}
-            options={students.map(student => ({
+            options={studentsData.map(student => ({
               name: `${student.lastName}, ${student.indexNumber}`,
               id: student.id,
             }))}
             displayValue='name'
-            selectedValues={(() => {
-              if (editGroupDialogOpen && currentGroupId) {
-                const grp = editedGroups.find(g => g.id === currentGroupId);
-                if (!grp) return [];
-                return students
-                  .filter(student => grp.studentIdList.includes(student.id))
-                  .map(student => ({
-                    name: `${student.lastName}, ${student.indexNumber}`,
-                    id: student.id,
-                  }));
-              } else {
-                return [];
-              }
-            })()}
+            selectedValues={
+              editGroupDialogOpen && currentGroupId
+                ? studentsData
+                    .filter(student =>
+                      groupsData
+                        .find(g => g.id === currentGroupId)
+                        ?.studentIdList.includes(student.id)
+                    )
+                    .map(student => ({
+                      name: `${student.lastName}, ${student.indexNumber}`,
+                      id: student.id,
+                    }))
+                : []
+            }
             showCheckbox
-            ref={selectedItems as unknown as LegacyRef<Multiselect>}
+            ref={selectedItems}
           />
         </DialogContent>
         <DialogActions>
@@ -384,133 +342,40 @@ export const Planner = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Groups Table */}
-      <Table
-        sx={{
-          borderCollapse: 'collapse',
-          width: '100%',
-          marginTop: theme.spacing(2),
-          fontFamily: theme.typography.fontFamily,
-          userSelect: 'none',
-        }}
-      >
+      <Table sx={{ minWidth: 650, marginTop: 2 }}>
         <TableHead>
           <TableRow>
-            <TableCell
-              sx={{
-                border: `1px solid ${theme.palette.divider}`,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                backgroundColor: theme.palette.background.paper,
-              }}
-            >
-              Group ID
-            </TableCell>
-            <TableCell
-              sx={{
-                border: `1px solid ${theme.palette.divider}`,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                backgroundColor: theme.palette.background.paper,
-              }}
-            >
-              Group Name
-            </TableCell>
-            <TableCell
-              sx={{
-                border: `1px solid ${theme.palette.divider}`,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                backgroundColor: theme.palette.background.paper,
-              }}
-            >
-              List of Students
-            </TableCell>
-            {currentUser?.userRole === 'ADMIN' && (
-              <>
-                <TableCell
-                  sx={{
-                    border: `1px solid ${theme.palette.divider}`,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    backgroundColor: theme.palette.background.paper,
-                  }}
-                >
-                  Options
-                </TableCell>
-                <TableCell
-                  sx={{
-                    border: `1px solid ${theme.palette.divider}`,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    backgroundColor: theme.palette.background.paper,
-                  }}
-                >
-                  Delete
-                </TableCell>
-              </>
-            )}
+            <TableCell>Group ID</TableCell>
+            <TableCell>Group Name</TableCell>
+            <TableCell>List of Students</TableCell>
+            {currentUser?.userRole === 'ADMIN' ? (
+              <TableCell>Options</TableCell>
+            ) : null}
+            {currentUser?.userRole === 'ADMIN' ? (
+              <TableCell>Delete</TableCell>
+            ) : null}
           </TableRow>
         </TableHead>
         <TableBody>
-          {groups.map((group: Group) => (
+          {groupsData.map(group => (
             <TableRow key={group.id}>
-              <TableCell
-                sx={{
-                  border: `1px solid ${theme.palette.divider}`,
-                  textAlign: 'center',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {group.id}
-              </TableCell>
-              <TableCell
-                sx={{
-                  border: `1px solid ${theme.palette.divider}`,
-                  textAlign: 'center',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {group.name}
-              </TableCell>
-              <TableCell
-                sx={{
-                  border: `1px solid ${theme.palette.divider}`,
-                  textAlign: 'center',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {students
+              <TableCell>{group.id}</TableCell>
+              <TableCell>{group.name}</TableCell>
+              <TableCell>
+                {studentsData
                   .filter(student => group.studentIdList.includes(student.id))
                   .map(student => student.indexNumber)
                   .join(', ')}
               </TableCell>
               {currentUser?.userRole === 'ADMIN' && (
-                <TableCell
-                  sx={{
-                    border: `1px solid ${theme.palette.divider}`,
-                    textAlign: 'center',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <TableCell>
                   <IconButton onClick={() => handleEditGroupOpen(group.id)}>
                     <EditIcon />
                   </IconButton>
                 </TableCell>
               )}
               {currentUser?.userRole === 'ADMIN' && (
-                <TableCell
-                  sx={{
-                    border: `1px solid ${theme.palette.divider}`,
-                    textAlign: 'center',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <TableCell>
                   <IconButton onClick={() => handleDeleteGroup(group.id)}>
                     <DeleteIcon />
                   </IconButton>
@@ -523,5 +388,3 @@ export const Planner = () => {
     </AppContainer>
   );
 };
-
-export default Planner;

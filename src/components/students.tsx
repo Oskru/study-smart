@@ -5,26 +5,33 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  IconButton,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { deleteUser, fetchUsers, User } from '../hooks/api/use-users.ts';
-import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useUser } from '../hooks/use-user.ts';
+import { useUsersQuery, useDeleteUserMutation } from '../hooks/api/use-users';
+import { useSnackbar } from 'notistack';
 
 export const Students = () => {
-  const [students, setStudents] = useState<User[] | []>([]);
   const { user } = useUser();
+  const { enqueueSnackbar } = useSnackbar();
+  const { data: students = [] } = useUsersQuery(true); // onlyStudents = true
+  const deleteUserMutation = useDeleteUserMutation();
 
-  const deleteStudent = async (id: number) => {
-    deleteUser(id)
-      .then(() => setStudents(students.filter(student => student.id !== id)))
-      .catch(() => alert('Failed to delete student!'));
+  const deleteStudent = (id: number) => {
+    deleteUserMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar('Student deleted successfully!', {
+          variant: 'success',
+        });
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(`Failed to delete student: ${error}`, {
+          variant: 'error',
+        });
+      },
+    });
   };
-
-  useEffect(() => {
-    fetchUsers(true).then(data => setStudents(data));
-  }, []);
 
   return (
     <AppContainer title='View your students'>
@@ -46,13 +53,13 @@ export const Students = () => {
               <TableCell>{student.firstName}</TableCell>
               <TableCell>{student.lastName}</TableCell>
               <TableCell>{student.email}</TableCell>
-              {user?.userRole === 'ADMIN' ? (
+              {user?.userRole === 'ADMIN' && (
                 <TableCell>
                   <IconButton onClick={() => deleteStudent(student.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
-              ) : null}
+              )}
             </TableRow>
           ))}
         </TableBody>

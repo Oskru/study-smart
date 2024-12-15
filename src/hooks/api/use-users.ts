@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { apiInstance } from '../../utils/api-instance.ts';
-import { USERS_URL } from '../../utils/consts/api.ts';
+import { apiInstance } from '../../utils/api-instance';
+import { USERS_URL } from '../../utils/consts/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const userSchema = z.object({
   id: z.number(),
@@ -12,20 +13,29 @@ const userSchema = z.object({
 
 export type User = z.infer<typeof userSchema>;
 
-export const fetchUsers = async (
-  onlyStudents?: boolean
-): Promise<User[] | []> => {
-  const response = await apiInstance.get<User[] | []>(USERS_URL);
-
+const fetchUsers = async (onlyStudents?: boolean): Promise<User[]> => {
+  const response = await apiInstance.get<User[]>(USERS_URL);
+  const data = response.data;
   if (onlyStudents) {
-    return response.data.filter(student => student.role == 'STUDENT');
+    return data.filter(student => student.role === 'STUDENT');
   }
+  return data;
+};
 
+const deleteUser = async (id: number) => {
+  const response = await apiInstance.delete<User[] | []>(`${USERS_URL}/${id}`);
   return response.data;
 };
 
-export const deleteUser = async (id: number): Promise<User[] | []> => {
-  const response = await apiInstance.delete<User[] | []>(`${USERS_URL}/${id}`);
+export const useUsersQuery = (onlyStudents?: boolean) => {
+  return useQuery(['users', { onlyStudents }], () => fetchUsers(onlyStudents));
+};
 
-  return response.data;
+export const useDeleteUserMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(deleteUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
 };

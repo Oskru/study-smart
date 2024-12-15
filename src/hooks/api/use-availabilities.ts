@@ -1,54 +1,55 @@
-import { apiInstance } from '../../utils/api-instance.ts';
-import { util, z } from 'zod';
-import { AVAILABILITIES_URL } from '../../utils/consts/api.ts';
-import Omit = util.Omit;
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiInstance } from '../../utils/api-instance';
+import { z } from 'zod';
+import { AVAILABILITIES_URL } from '../../utils/consts/api';
+import { dayNameSchema } from './use-preferences.ts';
 
 export const availabilitySchema = z.object({
   id: z.number(),
   dayId: z.number(),
-  dayName: z.enum([
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ]),
+  dayName: dayNameSchema,
   times: z.array(z.string()),
   timeRanges: z.array(z.array(z.string())),
   lecturerId: z.number(),
 });
 
-const availabilitiesSchema = z.union([
-  z.array(availabilitySchema),
-  z.array(z.any()),
-]);
+const availabilitiesSchema = z.array(availabilitySchema);
 
 export type Availability = z.infer<typeof availabilitySchema>;
 export type Availabilities = z.infer<typeof availabilitiesSchema>;
 
-export const fetchAvailabilities = async (): Promise<Availabilities> => {
+const fetchAvailabilities = async (): Promise<Availabilities> => {
   const response = await apiInstance.get<Availability[]>(AVAILABILITIES_URL);
-
   return response.data;
 };
 
-export const postAvailability = async (
-  availability: Omit<Availability, 'id'>[]
-) => {
+const postAvailability = async (availability: Omit<Availability, 'id'>[]) => {
   await apiInstance.post<Availabilities>(AVAILABILITIES_URL, availability);
 };
 
-export const fetchAvailabilitiesById = async (
-  availabilityIds: number[]
-): Promise<Availability[]> => {
-  const availabilities = await fetchAvailabilities();
-  return availabilities.filter(availability =>
-    availabilityIds.includes(availability.id)
-  );
+const deleteAvailability = async (id: number) => {
+  await apiInstance.delete(`${AVAILABILITIES_URL}/${id}`);
 };
 
-export const deleteAvailability = async (id: number) => {
-  await apiInstance.delete<Availabilities>(`${AVAILABILITIES_URL}/${id}`);
+// Queries & Mutations
+export const useAvailabilitiesQuery = () => {
+  return useQuery(['availabilities'], fetchAvailabilities);
+};
+
+export const usePostAvailabilityMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(postAvailability, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['availabilities']);
+    },
+  });
+};
+
+export const useDeleteAvailabilityMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(deleteAvailability, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['availabilities']);
+    },
+  });
 };

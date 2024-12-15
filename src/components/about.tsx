@@ -5,7 +5,7 @@ import AppContainer from './app-container';
 export const About: React.FC = () => {
   return (
     <AppContainer title='About the Smart Study'>
-      <Box sx={{ padding: 3 }}>
+      <Box>
         <Typography variant='h5' gutterBottom>
           What is Smart Study?
         </Typography>

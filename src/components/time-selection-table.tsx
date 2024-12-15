@@ -37,6 +37,10 @@ interface TimeSelectionTableProps {
   onSelect: (selectedData: SelectedDataProps[]) => void;
   loading?: boolean;
   isLecturer?: boolean;
+  mode: 'add' | 'delete';
+  deletionMap?: Record<string, { id: number; allTimes: string[] }>;
+  selectedForDeletion?: number[];
+  onDeleteSelectionChange?: (ids: number[]) => void;
 }
 
 const hours = [
@@ -69,12 +73,26 @@ const days = [
   'Sunday',
 ];
 
+const dayIdMap: Record<string, number> = {
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+  Sunday: 7,
+};
+
 export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
   scheduleData = [],
   pastSelections = [],
   onSelect,
   loading = false,
   isLecturer = false,
+  mode = 'add',
+  deletionMap = {},
+  selectedForDeletion = [],
+  onDeleteSelectionChange,
 }) => {
   const theme = useTheme();
 
@@ -92,7 +110,6 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
     return daySchedule.times.includes(hour);
   };
 
-  // Convert pastSelections into a set for quick lookup
   const pastSet = useMemo(() => {
     const s = new Set<string>();
     pastSelections.forEach(sel => {
@@ -101,11 +118,9 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
     return s;
   }, [pastSelections]);
 
-  // selectedCells: { [day]: string[] } to store which hours are currently selected (blue)
   const [selectedCells, setSelectedCells] = useState<Record<string, string[]>>(
     {}
   );
-
   const prevSelectedDataRef = useRef<SelectedDataProps[] | null>(null);
 
   const buildTimeRangesFromSortedTimes = (
@@ -137,26 +152,37 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
 
   const handleCellClick = (day: string, hour: string) => {
     const key = `${day}-${hour}`;
-    const inSchedule = isHourInSchedule(day, hour);
-    const past = pastSet.has(key);
-    // Cell is clickable if lecturer mode or (student mode and inSchedule or past)
-    const clickable = isLecturer || past || inSchedule;
-    if (!clickable) return;
+    if (mode === 'add') {
+      const inSchedule = isHourInSchedule(day, hour);
+      const past = pastSet.has(key);
+      const clickable = isLecturer || past || inSchedule;
+      if (!clickable) return;
 
-    setSelectedCells(prev => {
-      const currentSelection = prev[day] || [];
-      if (currentSelection.includes(hour)) {
-        // Deselect
-        const newSelection = currentSelection.filter(h => h !== hour);
-        const updated = { ...prev, [day]: newSelection };
-        if (newSelection.length === 0) delete updated[day];
-        return updated;
+      setSelectedCells(prev => {
+        const currentSelection = prev[day] || [];
+        if (currentSelection.includes(hour)) {
+          // Deselect
+          const newSelection = currentSelection.filter(h => h !== hour);
+          const updated = { ...prev, [day]: newSelection };
+          if (newSelection.length === 0) delete updated[day];
+          return updated;
+        } else {
+          // Select
+          const newSelection = [...currentSelection, hour].sort();
+          return { ...prev, [day]: newSelection };
+        }
+      });
+    } else {
+      // Delete mode
+      const entry = deletionMap[key];
+      if (!entry || !onDeleteSelectionChange) return;
+      const { id } = entry;
+      if (selectedForDeletion.includes(id)) {
+        onDeleteSelectionChange(selectedForDeletion.filter(x => x !== id));
       } else {
-        // Select
-        const newSelection = [...currentSelection, hour].sort();
-        return { ...prev, [day]: newSelection };
+        onDeleteSelectionChange([...selectedForDeletion, id]);
       }
-    });
+    }
   };
 
   useEffect(() => {
@@ -166,10 +192,13 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
         const sortedTimes = [...selectedCells[day]].sort();
         const timeRanges = buildTimeRangesFromSortedTimes(sortedTimes);
 
-        // If daySchedule is not found or dayId is missing, fallback to index-based dayId
-        const fallbackDayId = days.indexOf(day) + 1;
+        let finalDayId = daySchedule?.dayId;
+        if (!finalDayId || finalDayId === 0) {
+          finalDayId = dayIdMap[day] || 0;
+        }
+
         return {
-          iden: daySchedule?.dayId ?? fallbackDayId,
+          iden: finalDayId,
           dayName: day,
           times: sortedTimes,
           timeRanges,
@@ -177,7 +206,6 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
       }
     );
 
-    // Compare to prevSelectedData to avoid infinite loops
     const prevData = prevSelectedDataRef.current;
     const dataChanged =
       !prevData ||
@@ -214,25 +242,23 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
     const key = `${day}-${hour}`;
     const past = pastSet.has(key);
     if (isLecturer) {
-      // Lecturer mode
       if (past) return 'orange';
       return 'none';
     } else {
-      // Student mode
       if (past) return 'orange';
       if (isHourInSchedule(day, hour)) return 'green';
       return 'none';
     }
   };
 
-  const tableWrapperStyle = {
-    position: 'relative',
-    filter: loading ? 'blur(1px)' : 'none',
-  } as const;
-
   return (
     <Box sx={{ position: 'relative' }}>
-      <Box sx={tableWrapperStyle}>
+      <Box
+        sx={{
+          position: 'relative',
+          filter: loading ? 'blur(1px)' : 'none',
+        }}
+      >
         <Table
           sx={{
             borderCollapse: 'collapse',
@@ -286,19 +312,32 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
                   {hours.map(hour => {
                     const isSelected = daySelection.includes(hour);
                     const baseColor = getBaseColor(day, hour);
-                    // If selected => blue, else => baseColor
-                    let bgColor = isSelected
-                      ? theme.palette.info.main // selected = blue
-                      : baseColor === 'orange'
-                        ? theme.palette.warning.light
-                        : baseColor === 'green'
-                          ? theme.palette.success.light
-                          : theme.palette.background.default;
-
                     const key = `${day}-${hour}`;
+                    const entry = deletionMap[key]; // Safe to define here
                     const inSchedule = isHourInSchedule(day, hour);
                     const past = pastSet.has(key);
                     const clickable = isLecturer || past || inSchedule;
+
+                    let bgColor: string;
+                    if (mode === 'add') {
+                      bgColor = isSelected
+                        ? theme.palette.info.main
+                        : baseColor === 'orange'
+                          ? theme.palette.warning.light
+                          : baseColor === 'green'
+                            ? theme.palette.success.light
+                            : theme.palette.background.default;
+                    } else {
+                      // Delete mode
+                      bgColor =
+                        entry && selectedForDeletion.includes(entry.id)
+                          ? theme.palette.error.light
+                          : baseColor === 'orange'
+                            ? theme.palette.warning.light
+                            : baseColor === 'green'
+                              ? theme.palette.success.light
+                              : theme.palette.background.default;
+                    }
 
                     return (
                       <TableCell
@@ -313,13 +352,23 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
                           backgroundColor: bgColor,
                           '&:hover': {
                             backgroundColor: clickable
-                              ? isSelected
-                                ? theme.palette.info.dark // hover on selected blue
-                                : baseColor === 'orange'
-                                  ? theme.palette.warning.main // hover on orange base
-                                  : baseColor === 'green'
-                                    ? theme.palette.success.main // hover on green base
-                                    : theme.palette.action.hover // hover on none
+                              ? mode === 'add'
+                                ? isSelected
+                                  ? theme.palette.info.dark
+                                  : baseColor === 'orange'
+                                    ? theme.palette.warning.main
+                                    : baseColor === 'green'
+                                      ? theme.palette.success.main
+                                      : theme.palette.action.hover
+                                : // Delete mode hover
+                                  entry &&
+                                    selectedForDeletion.includes(entry.id)
+                                  ? theme.palette.error.main
+                                  : baseColor === 'orange'
+                                    ? theme.palette.warning.main
+                                    : baseColor === 'green'
+                                      ? theme.palette.success.main
+                                      : theme.palette.action.hover
                               : theme.palette.background.default,
                           },
                         }}

@@ -73,7 +73,6 @@ export const useAuth = () => {
 
     if (status === 201) {
       // Lecturer doesn't get a token
-      // Navigate to a confirmation page
       navigate('/lecturer-confirmation');
     }
   };

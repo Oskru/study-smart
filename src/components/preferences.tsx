@@ -51,33 +51,53 @@ function Preferences() {
   const [selectedForDeletion, setSelectedForDeletion] = useState<number[]>([]);
 
   // Derive user's courses
-  const userGroups = groupsData.filter(g =>
-    g.studentIdList.includes(user?.id ?? -1)
+  const userGroups = useMemo(
+    () => groupsData.filter(g => g.studentIdList.includes(user?.id ?? -1)),
+    [groupsData, user]
   );
-  const userCourseIds = new Set<number>();
-  userGroups.forEach(g => {
-    g.courseIdList.forEach(cid => userCourseIds.add(cid));
-  });
-  const userCourses = coursesData.filter(c => userCourseIds.has(c.id));
 
+  const userCourseIds = useMemo(() => {
+    const set = new Set<number>();
+    userGroups.forEach(g => {
+      g.courseIdList.forEach(cid => set.add(cid));
+    });
+    return set;
+  }, [userGroups]);
+
+  const userCourses = useMemo(() => {
+    return coursesData.filter(c => userCourseIds.has(c.id));
+  }, [coursesData, userCourseIds]);
+
+  // Set selectedCourses only when needed to avoid infinite loops
   useEffect(() => {
-    setSelectedCourses(userCourses.map(c => c.id));
-  }, [userCourses]);
+    const userCourseIdsArr = userCourses.map(c => c.id);
+    // Only update if different
+    if (
+      selectedCourses.length !== userCourseIdsArr.length ||
+      !selectedCourses.every(id => userCourseIdsArr.includes(id))
+    ) {
+      setSelectedCourses(userCourseIdsArr);
+    }
+  }, [userCourses, selectedCourses]);
 
   // Past selections
-  const pastPreferences = preferencesData
-    .filter(
-      pref =>
-        pref.studentId === user?.id && selectedCourses.includes(pref.courseId)
-    )
-    .map(pref => ({
-      dayName: pref.dayName,
-      times: pref.times,
-    }));
+  const pastPreferences = useMemo(() => {
+    return preferencesData
+      .filter(
+        pref =>
+          pref.studentId === user?.id && selectedCourses.includes(pref.courseId)
+      )
+      .map(pref => ({
+        dayName: pref.dayName,
+        times: pref.times,
+      }));
+  }, [preferencesData, user, selectedCourses]);
 
-  const minSelections = userCourses
-    .filter(c => selectedCourses.includes(c.id))
-    .reduce((sum, c) => sum + c.courseDuration, 0);
+  const minSelections = useMemo(() => {
+    return userCourses
+      .filter(c => selectedCourses.includes(c.id))
+      .reduce((sum, c) => sum + c.courseDuration, 0);
+  }, [userCourses, selectedCourses]);
 
   const pastCount = pastPreferences.reduce((sum, p) => sum + p.times.length, 0);
   const newCount = preferences.reduce((sum, p) => sum + p.times.length, 0);
@@ -107,8 +127,6 @@ function Preferences() {
     if (currentlySelected < minSelections) return;
     if (!user || selectedCourses.length === 0) return;
 
-    // For each selected course, create a batch of preferences
-    // and send a separate request
     const requests = selectedCourses.map(courseId => {
       const prefsForCourse = preferences.map(pref => ({
         dayId: pref.iden,
@@ -118,7 +136,6 @@ function Preferences() {
         courseId,
         studentId: Number(user.id),
       }));
-
       return postPreferenceMutation.mutateAsync(prefsForCourse);
     });
 
@@ -167,33 +184,8 @@ function Preferences() {
           }
           label='Delete mode'
         />
-        <Typography variant='body1'>
-          {currentlySelected}/{minSelections} selections
-        </Typography>
-        <TimeSelectionTable
-          scheduleData={availabilitiesData as DaySchedule[]}
-          pastSelections={pastPreferences}
-          loading={
-            postPreferenceMutation.isLoading ||
-            deletePreferenceMutation.isLoading ||
-            isAvailabilitiesDataLoading ||
-            isCoursesDataLoading ||
-            isGroupsDataLoading ||
-            isPreferencesDataLoading
-          }
-          onSelect={selectedData => {
-            if (mode === 'add') {
-              setPreferences(selectedData);
-            }
-          }}
-          isLecturer={false}
-          mode={mode}
-          deletionMap={deletionMap}
-          selectedForDeletion={selectedForDeletion}
-          onDeleteSelectionChange={ids => setSelectedForDeletion(ids)}
-        />
         <div>
-          <InputLabel id='course'>Courses* (required)</InputLabel>
+          <InputLabel id='course'>Courses</InputLabel>
           <Select
             labelId='course'
             id='course-select'
@@ -208,6 +200,33 @@ function Preferences() {
               </MenuItem>
             ))}
           </Select>
+        </div>
+        <div>
+          <Typography variant='body1'>
+            {currentlySelected}/{minSelections} selections
+          </Typography>
+          <TimeSelectionTable
+            scheduleData={availabilitiesData as DaySchedule[]}
+            pastSelections={pastPreferences}
+            loading={
+              postPreferenceMutation.isLoading ||
+              deletePreferenceMutation.isLoading ||
+              isAvailabilitiesDataLoading ||
+              isCoursesDataLoading ||
+              isGroupsDataLoading ||
+              isPreferencesDataLoading
+            }
+            onSelect={selectedData => {
+              if (mode === 'add') {
+                setPreferences(selectedData);
+              }
+            }}
+            isLecturer={false}
+            mode={mode}
+            deletionMap={deletionMap}
+            selectedForDeletion={selectedForDeletion}
+            onDeleteSelectionChange={ids => setSelectedForDeletion(ids)}
+          />
         </div>
         {mode === 'add' &&
           preferences.length > 0 &&

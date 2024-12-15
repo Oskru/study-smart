@@ -12,8 +12,7 @@ export interface User {
   userRole: string;
 }
 
-// TODO: check user roles
-const userRoles = ['STUDENT', 'LECTURER', 'ADMIN'] as const;
+const userRoles = ['STUDENT', 'LECTURER', 'PLANNER', 'ADMIN'] as const;
 
 const tokenSchema = z.object({
   firstName: z.string(),
@@ -36,38 +35,34 @@ export const useUser = () => {
     } else {
       removeUser();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const addUser = (token: string) => {
     setToken(token);
     apiInstance.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     const decodedToken = decodeToken<Token>(token);
-    const {
-      data: validatedToken,
-      success,
-      error,
-    } = tokenSchema.safeParse(decodedToken);
+    const parsed = tokenSchema.safeParse(decodedToken);
 
-    if (success) {
+    if (parsed.success) {
       setUser({
-        id: validatedToken.id,
-        email: validatedToken.sub,
-        firstName: validatedToken.firstName,
-        lastName: validatedToken.lastName,
-        userRole: validatedToken.userRole,
+        id: parsed.data.id,
+        email: parsed.data.sub,
+        firstName: parsed.data.firstName,
+        lastName: parsed.data.lastName,
+        userRole: parsed.data.userRole,
       });
     } else {
       console.error(
         'There was an error while trying to validate token: ',
-        error
+        parsed.error
       );
     }
   };
 
   const removeUser = () => {
     setUser(null);
-    setToken(null);
-
+    setToken(null); // This should trigger localStorage removal in AuthContext
     delete apiInstance.defaults.headers.common['Authorization'];
   };
 

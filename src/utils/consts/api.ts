@@ -1,6 +1,7 @@
 export const API_ROOT_URL = 'https://study-smart-curw.onrender.com/api';
 export const LOGIN_URL = `/auth/authenticate`;
-export const REGISTER_URL = `/auth/register`;
+export const REGISTER_STUDENT_URL = `/auth/registerStudent`;
+export const REGISTER_LECTURER_URL = `/auth/registerLecturer`;
 export const PREFERENCES_URL = `/preferences`;
 export const COURSES_URL = `/courses`;
 export const STUDENTS_URL = `/students`;

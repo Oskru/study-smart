@@ -361,7 +361,7 @@ export const Planner = () => {
       >
         {courses.map(course => (
           <MenuItem key={course.id} value={course.id}>
-            {course.name} {course.id}
+            {course.name}
           </MenuItem>
         ))}
       </Select>
@@ -377,7 +377,7 @@ export const Planner = () => {
       >
         {lecturers.map(lecturer => (
           <MenuItem key={lecturer.id} value={lecturer.id}>
-            {lecturer.firstName} {lecturer.lastName} {lecturer.id}
+            {lecturer.firstName} {lecturer.lastName}
           </MenuItem>
         ))}
       </Select>

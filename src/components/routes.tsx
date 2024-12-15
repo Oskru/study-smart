@@ -15,6 +15,7 @@ import UserList from './user-list.tsx';
 import AddPlanner from './add-planner.tsx';
 import Availabilities from './availabilities.tsx';
 import { About } from './about.tsx';
+import LecturerPendingConfirmation from './lecturer-pending-confirmation.tsx';
 
 export default function Routes() {
   const { token } = useUser();
@@ -96,6 +97,10 @@ export default function Routes() {
     {
       path: '/register',
       element: <Register />,
+    },
+    {
+      path: '/lecturer-confirmation',
+      element: <LecturerPendingConfirmation />,
     },
   ];
 

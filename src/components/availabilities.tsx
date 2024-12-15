@@ -58,8 +58,7 @@ function Availabilities() {
   }, []);
 
   const filteredAvailabilities = availabilitiesResponse.filter(
-    preference =>
-      preference.dayName === dayOfWeek && preference.courseId === currentCourse
+    availability => availability.dayName === dayOfWeek
   );
 
   const handleSelectTimeRange = (selectedData: SelectedDataProps[]) => {
@@ -71,12 +70,15 @@ function Availabilities() {
     deleteAvailability(availabilityToDelete.id!)
       .then(() => {
         setAvailabilitiesResponse(
-          availabilitiesResponse.filter(preference => {
-            return preference.id !== availabilityToDelete.id;
+          availabilitiesResponse.filter(availability => {
+            return availability.id !== availabilityToDelete.id;
           })
         );
       })
-      .catch(error => alert(`Error while deleting preference: ${error}`));
+      .catch(error =>
+        alert(`Error while deleting availability
+      : ${error}`)
+      );
   };
 
   const handleSendAvailabilities = () => {
@@ -97,6 +99,16 @@ function Availabilities() {
     <AppContainer title='Availabilities Management'>
       <Box display='flex' flexDirection='column' gap={4}>
         <ReactWeekTimeRangePicker selectTimeRange={handleSelectTimeRange} />
+        {availabilities && Object.keys(availabilities).length !== 0 ? (
+          <Button
+            variant='contained'
+            size='large'
+            disabled={!availabilities}
+            onClick={handleSendAvailabilities}
+          >
+            Send availability
+          </Button>
+        ) : null}
         <div>
           <InputLabel id='day-of-week'>Day of week</InputLabel>
           <Select
@@ -121,16 +133,6 @@ function Availabilities() {
             ))}
           </Select>
         </div>
-        {availabilities && Object.keys(availabilities).length !== 0 ? (
-          <Button
-            variant='contained'
-            size='large'
-            disabled={!availabilities}
-            onClick={handleSendAvailabilities}
-          >
-            Send availability
-          </Button>
-        ) : null}
         <Typography variant='h6'>
           Availabilities for {dayOfWeek || '...'}
         </Typography>

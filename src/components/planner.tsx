@@ -78,12 +78,11 @@ const getBackgroundColor = (votes: number) => {
 const StyledTd = styled.td<{ votes: number }>`
   background-color: ${({ votes }) => getBackgroundColor(votes)};
   color: black;
-  padding: 10px;
   text-align: center;
   font-size: 15px;
   font-weight: bold;
   border: 1px solid #ddd;
-  padding: 0px;
+  padding: 0;
 `;
 
 const hours = [
@@ -131,7 +130,9 @@ interface PreferenceTableProps {
   votes: { [key: string]: number };
 }
 
-const PreferenceTable: React.FC<PreferenceTableProps> = ({ votes }) => {
+export const PreferenceVotesTable: React.FC<PreferenceTableProps> = ({
+  votes,
+}) => {
   const renderCell = (day: string, hour: string) => {
     const key = `${day}-${hour}`;
     const votesForCell = votes[key] || 0; // Jeśli nie ma głosów, domyślnie 0
@@ -164,8 +165,6 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({ votes }) => {
     </table>
   );
 };
-
-export default PreferenceTable;
 
 export const Planner = () => {
   const [votes, setVotes] = useState<Votes>({});
@@ -396,7 +395,7 @@ export const Planner = () => {
         </Button>
       ) : null}
       {/* Preference Table ================================================*/}
-      <PreferenceTable votes={votes} />
+      <PreferenceVotesTable votes={votes} />
       <Fab
         color='primary'
         aria-label='add'
@@ -564,3 +563,5 @@ export const Planner = () => {
     </AppContainer>
   );
 };
+
+export default Planner;

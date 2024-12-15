@@ -16,7 +16,8 @@ import {
   TextField,
   Fab,
 } from '@mui/material';
-import { styled } from '@mui/system';
+import styled from '@emotion/styled';
+
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -49,6 +50,170 @@ const TimeSlot = styled(Paper)(({ theme }) => ({
   position: 'relative',
 }));
 
+import React from 'react';
+import {
+  Availabilities as AvailabilitiesType,
+  fetchAvailabilities,
+} from '../hooks/api/use-availabilities.ts';
+
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  useTheme,
+} from '@mui/material';
+
+interface DaySchedule {
+  id: number;
+  dayId: number;
+  dayName: string;
+  times: string[];
+  timeRanges: [string, string][];
+  lecturerId: number;
+}
+
+interface PreferenceTableProps {
+  scheduleData: DaySchedule[];
+}
+
+const hours = [
+  '00:00',
+  '01:00',
+  '02:00',
+  '03:00',
+  '04:00',
+  '05:00',
+  '06:00',
+  '07:00',
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+  '19:00',
+  '20:00',
+  '21:00',
+  '22:00',
+  '23:00',
+];
+
+const days = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+export const PreferenceTable: React.FC<PreferenceTableProps> = ({
+  scheduleData,
+}) => {
+  const theme = useTheme();
+
+  const scheduleByDay = scheduleData.reduce(
+    (acc: Record<string, DaySchedule>, curr) => {
+      acc[curr.dayName] = curr;
+      return acc;
+    },
+    {}
+  );
+
+  const isHourTaken = (dayName: string, hour: string) => {
+    const daySchedule = scheduleByDay[dayName];
+    if (!daySchedule) return false;
+    // Check if the hour is explicitly listed in `times`
+    return daySchedule.times.includes(hour);
+  };
+
+  return (
+    <Table
+      sx={{
+        borderCollapse: 'collapse',
+        width: '100%',
+        marginTop: theme.spacing(2),
+        fontFamily: theme.typography.fontFamily,
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            sx={{
+              border: `1px solid ${theme.palette.divider}`,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              backgroundColor: theme.palette.background.paper,
+            }}
+          >
+            Day/Hour
+          </TableCell>
+          {hours.map(hour => (
+            <TableCell
+              key={hour}
+              sx={{
+                border: `1px solid ${theme.palette.divider}`,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                backgroundColor: theme.palette.background.paper,
+              }}
+            >
+              {hour}
+            </TableCell>
+          ))}
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {days.map(day => (
+          <TableRow key={day}>
+            <TableCell
+              sx={{
+                border: `1px solid ${theme.palette.divider}`,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+            >
+              {day}
+            </TableCell>
+            {hours.map(hour => {
+              const taken = isHourTaken(day, hour);
+              return (
+                <TableCell
+                  key={`${day}-${hour}`}
+                  sx={{
+                    border: `1px solid ${theme.palette.divider}`,
+                    textAlign: 'center',
+                    fontSize: theme.typography.body2.fontSize,
+                    fontWeight: theme.typography.body2.fontWeight,
+                    backgroundColor: taken
+                      ? theme.palette.success.light
+                      : theme.palette.background.default,
+                    '&:hover': {
+                      backgroundColor: taken
+                        ? theme.palette.success.main
+                        : theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  {hour}
+                </TableCell>
+              );
+            })}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+};
+
 function Preferences() {
   const [courses, setCourses] = useState<Course[] | []>([]);
   const [currentCourse, setCurrentCourse] = useState<Course['id'] | null>(null);
@@ -58,11 +223,15 @@ function Preferences() {
   >(undefined);
   const [preferencesResponse, setPreferencesResponse] =
     useState<PreferencesType>([]);
+  const [availabilitiesResponse, setAvailabilitiesResponse] =
+    useState<AvailabilitiesType>([]);
   const { user } = useUser();
 
   // Populate preferences once data is fetched
   useEffect(() => {
     fetchPreferences().then(data => setPreferencesResponse(data));
+    fetchAvailabilities().then(data => setAvailabilitiesResponse(data));
+
     fetchCourses().then(data => {
       setCourses(data);
       setCurrentCourse(data[0].id);
@@ -109,6 +278,9 @@ function Preferences() {
   return (
     <AppContainer title='Preferences Management'>
       <Box display='flex' flexDirection='column' gap={4}>
+        <PreferenceTable
+          scheduleData={availabilitiesResponse as DaySchedule[]}
+        />
         <ReactWeekTimeRangePicker selectTimeRange={handleSelectTimeRange} />
         <div>
           <InputLabel id='course'>

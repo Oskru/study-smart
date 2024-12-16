@@ -9,6 +9,7 @@ export const courseSchema = z.object({
   description: z.string(),
   courseDuration: z.number(),
   lecturerId: z.number(),
+  groupId: z.number(),
   scheduled: z.boolean(),
 });
 
@@ -20,10 +21,12 @@ const fetchCourses = async (): Promise<Course[]> => {
 };
 
 const postCourse = async (course: Omit<Course, 'id'>) => {
-  const response = await apiInstance.post<Course[]>(
-    COURSES_URL,
-    JSON.stringify(course)
-  );
+  const response = await apiInstance.post<Course[]>(COURSES_URL, course);
+  return response.data;
+};
+
+const editCourse = async (id: number, data: Partial<Course>) => {
+  const response = await apiInstance.put<Course>(`${COURSES_URL}/${id}`, data);
   return response.data;
 };
 
@@ -43,6 +46,19 @@ export const usePostCourseMutation = () => {
       queryClient.invalidateQueries(['courses']);
     },
   });
+};
+
+export const useEditCourseMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation(
+    ({ id, data }: { id: number; data: Partial<Course> }) =>
+      editCourse(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['courses']);
+      },
+    }
+  );
 };
 
 export const useDeleteCourseMutation = () => {

@@ -117,13 +117,7 @@ const GroupList = () => {
   };
 
   return (
-    <Box
-      display={'flex'}
-      flexDirection='column'
-      gap={2}
-      component={AppContainer}
-      title='Group List'
-    >
+    <>
       <Table sx={{ minWidth: 650, marginTop: 2 }}>
         <TableHead>
           <TableRow>
@@ -249,7 +243,7 @@ const GroupList = () => {
       >
         <AddIcon />
       </Fab>
-    </Box>
+    </>
   );
 };
 

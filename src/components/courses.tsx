@@ -165,13 +165,7 @@ const CourseList = () => {
   };
 
   return (
-    <Box
-      display={'flex'}
-      flexDirection='column'
-      gap={2}
-      component={AppContainer}
-      title='Course List'
-    >
+    <>
       <Table sx={{ minWidth: 650, marginTop: 2 }}>
         <TableHead>
           <TableRow>
@@ -342,7 +336,7 @@ const CourseList = () => {
       >
         <AddIcon />
       </Fab>
-    </Box>
+    </>
   );
 };
 

@@ -8,11 +8,13 @@ import Register from './register.tsx';
 import { Students } from './students.tsx';
 import { Planner } from './planner.tsx';
 import { Admin } from './admin-panel.tsx';
-import UserList from './user-list.tsx';
+import UserList from './users.tsx';
 import AddPlanner from './add-planner.tsx';
 import Availabilities from './availabilities.tsx';
 import { About } from './about.tsx';
 import LecturerPendingConfirmation from './lecturer-pending-confirmation.tsx';
+import GroupList from './groups.tsx';
+import CourseList from './courses.tsx';
 
 // Public routes accessible to all users
 const routesForPublic = [
@@ -75,6 +77,16 @@ const routesForAuthenticatedOnly = [
       {
         path: '/planner',
         element: <Planner />,
+        children: [
+          {
+            path: 'groups',
+            element: <GroupList />,
+          },
+          {
+            path: 'courses',
+            element: <CourseList />,
+          },
+        ],
       },
       {
         path: '/admin-panel',

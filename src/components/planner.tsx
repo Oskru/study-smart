@@ -163,10 +163,16 @@ export const Planner = () => {
     );
   };
 
-  const handleGetPreferencesFromGroup = (id: number) => {
+  const handleGetPreferencesFromGroupAndCourse = (
+    groupId: number,
+    courseId: number
+  ) => {
     setVotes({});
-    const myGroup = groupsData.find(g => g.id === id);
+    const myGroup = groupsData.find(g => g.id === groupId);
     if (!myGroup) return;
+
+    const myCourse = coursesData.find(c => c.id === courseId);
+    if (!myCourse) return;
 
     const filteredStudents = studentsData.filter(student =>
       myGroup.studentIdList.includes(student.id)
@@ -176,7 +182,10 @@ export const Planner = () => {
       const studentPreferences = preferencesData.filter(preference =>
         student.preferenceIdList.includes(preference.id)
       );
-      studentPreferences.forEach(preference => {
+      const courseStudentPreferences = studentPreferences.filter(
+        preference => preference.courseId == courseId
+      );
+      courseStudentPreferences.forEach(preference => {
         preference.times.forEach(time => {
           addVote(preference.dayName, time);
         });
@@ -195,7 +204,7 @@ export const Planner = () => {
           onChange={e => {
             const groupId = e.target.value as number;
             setCurrentGroupId(groupId);
-            handleGetPreferencesFromGroup(groupId);
+            handleGetPreferencesFromGroupAndCourse(groupId, currentCourse ?? 1);
           }}
           fullWidth
         >
@@ -211,8 +220,15 @@ export const Planner = () => {
         <Select
           labelId='course'
           id='course-select'
-          value={currentCourse || ''}
-          onChange={e => setCurrentCourse(e.target.value as number)}
+          value={currentCourse || coursesData[0]?.id || ''}
+          onChange={e => {
+            const courseId = e.target.value as number;
+            setCurrentCourse(courseId);
+            handleGetPreferencesFromGroupAndCourse(
+              currentGroupId ?? 1,
+              courseId
+            );
+          }}
           fullWidth
         >
           {coursesData.map(course => (
@@ -227,7 +243,7 @@ export const Planner = () => {
         <Select
           labelId='lecturer'
           id='lecturer-select'
-          value={currentLecturer || ''}
+          value={currentLecturer || lecturersData[0]?.id || ''}
           onChange={e => setCurrentLecturer(e.target.value as number)}
           fullWidth
         >

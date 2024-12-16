@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import AppContainer from './app-container.tsx';
 import {
   Table,
   TableBody,
@@ -7,7 +6,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Box,
   Dialog,
   DialogTitle,
   DialogContent,

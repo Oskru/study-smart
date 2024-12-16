@@ -46,7 +46,7 @@ const getBackgroundColor = (votes: number) => {
   const intensity = Math.min(votes / maxVotes, 1);
   const r = Math.round(255 * intensity + 255 * (1 - intensity));
   const g = Math.round(255 * (1 - intensity));
-  const b = 150;
+  const b = Math.max(0, Math.round(100 - 100 * (intensity + 0.1)));
   return `rgb(${r}, ${g}, ${b})`;
 };
 

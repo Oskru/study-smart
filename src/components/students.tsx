@@ -21,12 +21,12 @@ export const Students = () => {
   const deleteStudent = (id: number) => {
     deleteUserMutation.mutate(id, {
       onSuccess: () => {
-        enqueueSnackbar('Student deleted successfully!', {
+        enqueueSnackbar('Student usunięty pomyślnie!', {
           variant: 'success',
         });
       },
       onError: (error: any) => {
-        enqueueSnackbar(`Failed to delete student: ${error}`, {
+        enqueueSnackbar(`Błąd podczas usuwania studenta: ${error}`, {
           variant: 'error',
         });
       },
@@ -34,12 +34,12 @@ export const Students = () => {
   };
 
   return (
-    <AppContainer title='View your students'>
+    <AppContainer title='Studenci'>
       <Table sx={{ minWidth: 650 }}>
         <TableHead>
           <TableRow>
-            <TableCell>First name</TableCell>
-            <TableCell>Last name</TableCell>
+            <TableCell>Imię</TableCell>
+            <TableCell>Nazwisko</TableCell>
             <TableCell>Email</TableCell>
             {user?.userRole === 'ADMIN' ? <TableCell>Options</TableCell> : null}
           </TableRow>

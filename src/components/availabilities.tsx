@@ -95,12 +95,12 @@ const Availabilities = () => {
     postAvailabilityMutation.mutate(toSend, {
       onSuccess: () => {
         setAvailabilities(undefined);
-        enqueueSnackbar('Availabilities sent successfully!', {
+        enqueueSnackbar('Godziny dostępności dodane pomyślnie!', {
           variant: 'success',
         });
       },
       onError: (error: any) => {
-        enqueueSnackbar(`Error sending availabilities: ${error}`, {
+        enqueueSnackbar(`Błąd podczas dodawania godzin dostępności: ${error}`, {
           variant: 'error',
         });
       },
@@ -112,21 +112,24 @@ const Availabilities = () => {
       deleteAvailabilityMutation.mutate(id, {
         onSuccess: () => {
           setSelectedForDeletion(prev => prev.filter(x => x !== id));
-          enqueueSnackbar('Availabilities deleted successfully!', {
+          enqueueSnackbar('Godziny dostępności usunięte pomyślnie!', {
             variant: 'success',
           });
         },
         onError: (error: any) => {
-          enqueueSnackbar(`Error deleting availabilities: ${error}`, {
-            variant: 'error',
-          });
+          enqueueSnackbar(
+            `Błąd podczas usuwania godzin dostępności: ${error}`,
+            {
+              variant: 'error',
+            }
+          );
         },
       });
     });
   };
 
   return (
-    <AppContainer title='Availabilities Management'>
+    <AppContainer title='Zarządzanie godzinami dostępności'>
       <Box display='flex' flexDirection='column' gap={4}>
         <FormControlLabel
           control={
@@ -139,10 +142,10 @@ const Availabilities = () => {
               }}
             />
           }
-          label='Delete mode'
+          label='Tryb usuwania'
         />
         <Typography variant='body1'>
-          {currentlySelected}/{minSelections} selections
+          {currentlySelected}/{minSelections} zaznaczone
         </Typography>
         <TimeSelectionTable
           onSelect={selectedData => {
@@ -173,7 +176,7 @@ const Availabilities = () => {
               size='large'
               onClick={handleSendAvailabilities}
             >
-              Send availability
+              Dodaj godziny dostępności
             </Button>
           )}
         {mode === 'delete' && selectedForDeletion.length > 0 && (
@@ -183,7 +186,7 @@ const Availabilities = () => {
             color='error'
             onClick={handleDelete}
           >
-            Delete selected
+            Usuń zaznaczone
           </Button>
         )}
       </Box>

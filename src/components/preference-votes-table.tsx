@@ -28,13 +28,13 @@ const hours = [
 ];
 
 const days = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+  ['Monday', 'Poniedziałek'],
+  ['Tuesday', 'Wtorek'],
+  ['Wednesday', 'Środa'],
+  ['Thursday', 'Czwartek'],
+  ['Friday', 'Piątek'],
+  ['Saturday', 'Sobota'],
+  ['Sunday', 'Niedziela'],
 ];
 
 interface PreferenceTableProps {
@@ -115,7 +115,7 @@ export const PreferenceVotesTable: React.FC<PreferenceTableProps> = ({
       </TableHead>
       <TableBody>
         {days.map(day => (
-          <TableRow key={day}>
+          <TableRow key={day[0]}>
             <TableCell
               sx={{
                 border: `1px solid ${theme.palette.divider}`,
@@ -123,9 +123,9 @@ export const PreferenceVotesTable: React.FC<PreferenceTableProps> = ({
                 textAlign: 'center',
               }}
             >
-              {day}
+              {day[1]}
             </TableCell>
-            {hours.map(hour => renderCell(day, hour))}
+            {hours.map(hour => renderCell(day[0], hour))}
           </TableRow>
         ))}
       </TableBody>

@@ -128,8 +128,8 @@ const GroupList = () => {
         <TableHead>
           <TableRow>
             <TableCell>ID</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>List of Students</TableCell>
+            <TableCell>Nazwa</TableCell>
+            <TableCell>Studenci</TableCell>
             {currentUser?.userRole === 'ADMIN' ? (
               <TableCell>Options</TableCell>
             ) : null}

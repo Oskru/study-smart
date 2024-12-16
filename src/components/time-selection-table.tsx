@@ -64,13 +64,13 @@ const hours = [
 ];
 
 const days = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+  ['Monday', 'Poniedziałek'],
+  ['Tuesday', 'Wtorek'],
+  ['Wednesday', 'Środa'],
+  ['Thursday', 'Czwartek'],
+  ['Friday', 'Piątek'],
+  ['Saturday', 'Sobota'],
+  ['Sunday', 'Niedziela'],
 ];
 
 const dayIdMap: Record<string, number> = {
@@ -278,7 +278,7 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
                   backgroundColor: theme.palette.background.paper,
                 }}
               >
-                Day/Hour
+                Dzień/Godzina
               </TableCell>
               {hours.map(hour => (
                 <TableCell
@@ -297,9 +297,9 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
           </TableHead>
           <TableBody>
             {days.map(day => {
-              const daySelection = selectedCells[day] || [];
+              const daySelection = selectedCells[day[0]] || [];
               return (
-                <TableRow key={day}>
+                <TableRow key={day[0]}>
                   <TableCell
                     sx={{
                       border: `1px solid ${theme.palette.divider}`,
@@ -307,14 +307,14 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
                       textAlign: 'center',
                     }}
                   >
-                    {day}
+                    {day[1]}
                   </TableCell>
                   {hours.map(hour => {
                     const isSelected = daySelection.includes(hour);
-                    const baseColor = getBaseColor(day, hour);
-                    const key = `${day}-${hour}`;
+                    const baseColor = getBaseColor(day[0], hour);
+                    const key = `${day[0]}-${hour}`;
                     const entry = deletionMap[key]; // Safe to define here
-                    const inSchedule = isHourInSchedule(day, hour);
+                    const inSchedule = isHourInSchedule(day[0], hour);
                     const past = pastSet.has(key);
                     const clickable = isLecturer || past || inSchedule;
 
@@ -342,7 +342,7 @@ export const TimeSelectionTable: React.FC<TimeSelectionTableProps> = ({
                     return (
                       <TableCell
                         key={key}
-                        onClick={() => handleCellClick(day, hour)}
+                        onClick={() => handleCellClick(day[0], hour)}
                         sx={{
                           border: `1px solid ${theme.palette.divider}`,
                           textAlign: 'center',

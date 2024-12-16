@@ -176,12 +176,12 @@ const CourseList = () => {
         <TableHead>
           <TableRow>
             <TableCell>ID</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>Course Duration</TableCell>
-            <TableCell>Lecturer</TableCell>
-            <TableCell>Group</TableCell>
-            <TableCell>Scheduled</TableCell>
+            <TableCell>Nazwa</TableCell>
+            <TableCell>Opis</TableCell>
+            <TableCell>Czas trwania</TableCell>
+            <TableCell>Wykładowca</TableCell>
+            <TableCell>Grupa</TableCell>
+            <TableCell>Zaplanowany</TableCell>
             {currentUser?.userRole === 'ADMIN' ? (
               <TableCell>Options</TableCell>
             ) : null}
@@ -234,7 +234,7 @@ const CourseList = () => {
         </DialogTitle>
         <DialogContent>
           <TextField
-            label='Name'
+            label='Nazwa'
             value={currentCourse?.name || ''}
             onChange={e =>
               setCurrentCourse({
@@ -246,7 +246,7 @@ const CourseList = () => {
             margin='dense'
           />
           <TextField
-            label='Description'
+            label='Opis'
             value={currentCourse?.description || ''}
             onChange={e =>
               setCurrentCourse({
@@ -258,7 +258,7 @@ const CourseList = () => {
             margin='dense'
           />
           <TextField
-            label='Course Duration'
+            label='Czas trwania'
             type='number'
             value={currentCourse?.courseDuration || ''}
             onChange={e =>
@@ -270,7 +270,7 @@ const CourseList = () => {
             fullWidth
             margin='dense'
           />
-          <InputLabel id='lecturer'>Lecturer</InputLabel>
+          <InputLabel id='lecturer'>Wykładowca</InputLabel>
           <Select
             labelId='lecturer'
             id='lecturer-select'
@@ -290,7 +290,7 @@ const CourseList = () => {
               </MenuItem>
             ))}
           </Select>
-          <InputLabel id='group'>Group</InputLabel>
+          <InputLabel id='group'>Grupa</InputLabel>
           <Select
             labelId='group'
             id='group-select'
@@ -319,7 +319,7 @@ const CourseList = () => {
                 : setAddCourseDialogOpen(false)
             }
           >
-            Cancel
+            Anuluj
           </Button>
           <Button
             onClick={() =>

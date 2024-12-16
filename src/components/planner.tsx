@@ -56,14 +56,17 @@ export const Planner = () => {
       { lecturerId, courseId },
       {
         onSuccess: () => {
-          enqueueSnackbar('Course added to lecturer successfully!', {
+          enqueueSnackbar('Kurs przypisany do wykładowcy pomyślnie!', {
             variant: 'success',
           });
         },
         onError: (error: any) => {
-          enqueueSnackbar(`Error adding course to lecturer: ${error}`, {
-            variant: 'error',
-          });
+          enqueueSnackbar(
+            `Błąd podczas przypisywania kursu do wykładowcy: ${error}`,
+            {
+              variant: 'error',
+            }
+          );
         },
       }
     );
@@ -99,10 +102,10 @@ export const Planner = () => {
   };
 
   return (
-    <AppContainer title='View your users'>
+    <AppContainer title='Planowanie'>
       {/* WYBÓR GRUPY DO PREFERENCJI */}
       <div>
-        <InputLabel id='group'>Group</InputLabel>
+        <InputLabel id='group'>Grupa</InputLabel>
         <Select
           labelId='group'
           id='group-select'
@@ -157,7 +160,7 @@ export const Planner = () => {
 
       {/* PRZYDZIELANIE KURSU DO WYKŁADOWCY */}
       <div>
-        <InputLabel id='course'>Course</InputLabel>
+        <InputLabel id='course'>Przedmiot</InputLabel>
         <Select
           labelId='course'
           id='course-select'
@@ -176,7 +179,7 @@ export const Planner = () => {
         </Select>
       </div>
       <div>
-        <InputLabel id='lecturer'>Lecturer</InputLabel>
+        <InputLabel id='lecturer'>Wykładowca</InputLabel>
         <Select
           labelId='lecturer'
           id='lecturer-select'
@@ -201,7 +204,7 @@ export const Planner = () => {
             handleAddCourseToLecturer(currentLecturerId!, currentCourseId!);
           }}
         >
-          Add Course To Lecturer
+          Przypisz kurs do wykładowcy
         </Button>
       ) : null}
 

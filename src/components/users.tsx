@@ -35,10 +35,12 @@ const UserList = () => {
   const handleDeleteUser = (id: number) => {
     deleteUserMutation.mutate(id, {
       onSuccess: () => {
-        enqueueSnackbar('User deleted successfully!', { variant: 'success' });
+        enqueueSnackbar('Użytkownik usunięty pomyślnie!', {
+          variant: 'success',
+        });
       },
       onError: (error: any) => {
-        enqueueSnackbar(`Failed to delete user: ${error}`, {
+        enqueueSnackbar(`Błąd podczas usuwania użytkownika: ${error}`, {
           variant: 'error',
         });
       },
@@ -61,9 +63,9 @@ const UserList = () => {
         >
           <MenuItem value=''>Wszystkie</MenuItem>
           <MenuItem value='ADMIN'>Admin</MenuItem>
-          <MenuItem value='PLANNER'>Planner</MenuItem>
+          <MenuItem value='PLANNER'>Planista</MenuItem>
           <MenuItem value='STUDENT'>Student</MenuItem>
-          <MenuItem value='LECTURER'>Lecturer</MenuItem>
+          <MenuItem value='LECTURER'>Wykładowca</MenuItem>
         </Select>
       </FormControl>
 

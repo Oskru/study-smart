@@ -86,7 +86,7 @@ export default function SignIn() {
       await login(email, password)
         .then(({ error }) => {
           if (error) {
-            alert('Invalid credentials, try signing in with a different ones');
+            alert('Nieprawidłowe hasło');
           }
         })
         .finally(() => {
@@ -103,7 +103,7 @@ export default function SignIn() {
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
       setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address.');
+      setEmailErrorMessage('Wpisz poprawny adres email');
       isValid = false;
     } else {
       setEmailError(false);
@@ -112,7 +112,7 @@ export default function SignIn() {
 
     if (!password.value || password.value.length < 6) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      setPasswordErrorMessage('Hasło musi mieć conajmniej 6 znaków');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -164,7 +164,7 @@ export default function SignIn() {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor='password'>Password</FormLabel>
+              <FormLabel htmlFor='password'>Hasło</FormLabel>
               <TextField
                 error={passwordError}
                 value={password}
@@ -195,7 +195,7 @@ export default function SignIn() {
               variant='contained'
               onClick={validateInputs}
             >
-              Sign in
+              Zaloguj się
             </LoadingButton>
             <Link
               component='button'
@@ -204,19 +204,19 @@ export default function SignIn() {
               variant='body2'
               sx={{ alignSelf: 'center' }}
             >
-              Forgot your password?
+              Zapomniałeś hasła?
             </Link>
           </Box>
           <Divider>or</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography sx={{ textAlign: 'center' }}>
-              Don&apos;t have an account?{' '}
+              Nie masz konta?{' '}
               <Link
                 href='/register'
                 variant='body2'
                 sx={{ alignSelf: 'center' }}
               >
-                Sign up
+                Zarejestruj się
               </Link>
             </Typography>
           </Box>

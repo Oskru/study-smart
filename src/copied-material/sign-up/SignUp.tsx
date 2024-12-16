@@ -297,28 +297,28 @@ export default function SignUp() {
             </FormControl>
 
             <FormControl>
-              <FormLabel htmlFor='name'>First name</FormLabel>
+              <FormLabel htmlFor='name'>Imię</FormLabel>
               <TextField
                 autoComplete='name'
                 name='name'
                 required
                 fullWidth
                 id='name'
-                placeholder='John'
+                placeholder='Jan'
                 error={nameError}
                 helperText={nameErrorMessage}
                 color={nameError ? 'error' : 'primary'}
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor='lastname'>Last name</FormLabel>
+              <FormLabel htmlFor='lastname'>Nazwisko</FormLabel>
               <TextField
                 autoComplete='lastname'
                 name='lastname'
                 required
                 fullWidth
                 id='lastname'
-                placeholder='Snow'
+                placeholder='Kowalski'
                 error={lastNameError}
                 helperText={lastNameErrorMessage}
                 color={lastNameError ? 'error' : 'primary'}
@@ -340,7 +340,7 @@ export default function SignUp() {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor='password'>Password</FormLabel>
+              <FormLabel htmlFor='password'>Hasło</FormLabel>
               <TextField
                 required
                 fullWidth
@@ -359,7 +359,7 @@ export default function SignUp() {
             {userType === 'student' && (
               <>
                 <FormControl>
-                  <FormLabel htmlFor='indexNumber'>Index Number</FormLabel>
+                  <FormLabel htmlFor='indexNumber'>Numer indeksu</FormLabel>
                   <TextField
                     required
                     fullWidth
@@ -372,13 +372,13 @@ export default function SignUp() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel htmlFor='major'>Major</FormLabel>
+                  <FormLabel htmlFor='major'>Kierunek</FormLabel>
                   <TextField
                     required
                     fullWidth
                     name='major'
                     id='major'
-                    placeholder='Computer Science'
+                    placeholder='Informatyka'
                     error={majorError}
                     helperText={majorErrorMessage}
                     color={majorError ? 'error' : 'primary'}
@@ -390,52 +390,52 @@ export default function SignUp() {
             {userType === 'lecturer' && (
               <>
                 <FormControl>
-                  <FormLabel htmlFor='department'>Department</FormLabel>
+                  <FormLabel htmlFor='department'>Wydział</FormLabel>
                   <TextField
                     required
                     fullWidth
                     name='department'
                     id='department'
-                    placeholder='Computer Science Dept.'
+                    placeholder='Wydział Informatyki'
                     error={departmentError}
                     helperText={departmentErrorMessage}
                     color={departmentError ? 'error' : 'primary'}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel htmlFor='title'>Title</FormLabel>
+                  <FormLabel htmlFor='title'>Tytuł</FormLabel>
                   <TextField
                     required
                     fullWidth
                     name='title'
                     id='title'
-                    placeholder='Professor / Dr.'
+                    placeholder='Profesor / Dr.'
                     error={titleError}
                     helperText={titleErrorMessage}
                     color={titleError ? 'error' : 'primary'}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel htmlFor='classRoom'>Class Room</FormLabel>
+                  <FormLabel htmlFor='classRoom'>Sala</FormLabel>
                   <TextField
                     required
                     fullWidth
                     name='classRoom'
                     id='classRoom'
-                    placeholder='Room 101'
+                    placeholder='Sala 101'
                     error={classRoomError}
                     helperText={classRoomErrorMessage}
                     color={classRoomError ? 'error' : 'primary'}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel htmlFor='officeNumber'>Office Number</FormLabel>
+                  <FormLabel htmlFor='officeNumber'>Numer buira</FormLabel>
                   <TextField
                     required
                     fullWidth
                     name='officeNumber'
                     id='officeNumber'
-                    placeholder='Office 202'
+                    placeholder='Biuro 202'
                     error={officeNumberError}
                     helperText={officeNumberErrorMessage}
                     color={officeNumberError ? 'error' : 'primary'}
@@ -446,7 +446,7 @@ export default function SignUp() {
 
             <FormControlLabel
               control={<Checkbox value='allowExtraEmails' color='primary' />}
-              label='I want to receive updates via email.'
+              label='Chcę otrzymywać powiadomienia na podany adres email'
             />
             <Button
               type='submit'
@@ -454,7 +454,7 @@ export default function SignUp() {
               variant='contained'
               onClick={validateInputs}
             >
-              Sign up
+              Zarejestruj się
             </Button>
           </Box>
           <Divider>
@@ -462,9 +462,9 @@ export default function SignUp() {
           </Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography sx={{ textAlign: 'center' }}>
-              Already have an account?{' '}
+              Już posiadasz konto?{' '}
               <Link href='/login' variant='body2' sx={{ alignSelf: 'center' }}>
-                Sign in
+                Zaloguj się
               </Link>
             </Typography>
           </Box>

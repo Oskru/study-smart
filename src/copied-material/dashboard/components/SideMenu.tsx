@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import MenuContent from './MenuContent';
 import OptionsMenu from './OptionsMenu';
-import { useUser } from '../../../hooks/use-user.ts';
+import { UserRole, useUser } from '../../../hooks/use-user.ts';
 import { useEffect, useState } from 'react';
 
 const drawerWidth = 240;
@@ -28,6 +28,14 @@ function capitalizeFirstLetter(val: string) {
     String(val).charAt(0).toUpperCase() + String(val).slice(1).toLowerCase()
   );
 }
+
+const getPolishRoleName = (role: UserRole): string => {
+  if (role === 'ADMIN') return 'Administrator';
+  if (role === 'LECTURER') return 'Wykładowca';
+  if (role === 'PLANNER') return 'Planista';
+  if (role === 'STUDENT') return 'Student';
+  return 'Użytkownik';
+};
 
 export default function SideMenu() {
   const { user } = useUser();
@@ -77,7 +85,7 @@ export default function SideMenu() {
             {user?.firstName} {user?.lastName}
           </Typography>
           <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-            {capitalizeFirstLetter(user?.userRole ?? 'User')}
+            {capitalizeFirstLetter(getPolishRoleName(user?.userRole))}
           </Typography>
         </Box>
         <OptionsMenu />

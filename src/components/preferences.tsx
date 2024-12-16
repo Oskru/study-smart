@@ -142,9 +142,9 @@ function Preferences() {
     try {
       await Promise.all(requests);
       setPreferences([]);
-      enqueueSnackbar('Preferences sent successfully!', { variant: 'success' });
+      enqueueSnackbar('Preferencje dodane pomyślnie!', { variant: 'success' });
     } catch (error: any) {
-      enqueueSnackbar(`Error while posting preferences: ${error}`, {
+      enqueueSnackbar(`Bład podczas dodawania preferencji: ${error}`, {
         variant: 'error',
       });
     }
@@ -155,12 +155,12 @@ function Preferences() {
       deletePreferenceMutation.mutate(id, {
         onSuccess: () => {
           setSelectedForDeletion(prev => prev.filter(pid => pid !== id));
-          enqueueSnackbar('Preferences deleted successfully!', {
+          enqueueSnackbar('Preferencje usunięte pomyślnie!', {
             variant: 'success',
           });
         },
         onError: (error: any) => {
-          enqueueSnackbar(`Error deleting preferences: ${error}`, {
+          enqueueSnackbar(`Błąd podczas usuwania preferencji: ${error}`, {
             variant: 'error',
           });
         },
@@ -169,7 +169,7 @@ function Preferences() {
   };
 
   return (
-    <AppContainer title='Preferences Management'>
+    <AppContainer title='Zarządzanie preferencjami'>
       <Box display='flex' flexDirection='column' gap={4}>
         <FormControlLabel
           control={
@@ -182,10 +182,10 @@ function Preferences() {
               }}
             />
           }
-          label='Delete mode'
+          label='Tryb usuwania'
         />
         <div>
-          <InputLabel id='course'>Courses</InputLabel>
+          <InputLabel id='course'>Przedmioty</InputLabel>
           <Select
             labelId='course'
             id='course-select'
@@ -203,7 +203,7 @@ function Preferences() {
         </div>
         <div>
           <Typography variant='body1'>
-            {currentlySelected}/{minSelections} selections
+            {currentlySelected}/{minSelections} wymanage
           </Typography>
           <TimeSelectionTable
             scheduleData={availabilitiesData as DaySchedule[]}
@@ -237,7 +237,7 @@ function Preferences() {
               size='large'
               onClick={handleSendPreferences}
             >
-              Send preference
+              Wyślij preferencje
             </Button>
           )}
         {mode === 'delete' && selectedForDeletion.length > 0 && (
@@ -247,7 +247,7 @@ function Preferences() {
             color='error'
             onClick={handleDelete}
           >
-            Delete selected
+            Usuń zaznaczone
           </Button>
         )}
       </Box>

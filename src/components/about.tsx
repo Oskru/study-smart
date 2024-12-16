@@ -5,73 +5,74 @@ import { Fireworks } from '@fireworks-js/react';
 
 export const About: React.FC = () => {
   return (
-    <AppContainer title='About the Smart Study'>
+    <AppContainer title='O Smart Study'>
       <Box>
         <Typography variant='h5' gutterBottom>
-          What is Smart Study?
+          Czym jest Smart Study?
         </Typography>
         <Typography variant='body1' paragraph>
-          Smart Study is a modern solution designed to simplify the process of
-          creating study plans that work for everyone involved. Whether you're a
-          student, a lecturer, or a planner, Smart Study provides tools to
-          accommodate your preferences, availability, and needs.
+          Smart Study to nowoczesne rozwiązanie zaprojektowane, aby uprościć
+          proces tworzenia planów zajęć, które odpowiadają potrzebom wszystkich
+          zaangażowanych. Niezależnie od tego, czy jesteś studentem, wykładowcą
+          czy organizatorem, Smart Study oferuje narzędzia dostosowane do Twoich
+          preferencji, dostępności i potrzeb.
         </Typography>
 
         <Typography variant='h6' gutterBottom>
-          Key Features
+          Kluczowe funkcje
         </Typography>
         <List>
           <ListItem>
             <ListItemText
-              primary='Student Preferences'
-              secondary='Students can send their course and schedule preferences to ensure the plan suits their learning needs.'
+              primary='Preferencje studentów'
+              secondary='Studenci mogą przesyłać swoje preferencje dotyczące kursów i harmonogramów, aby plan odpowiadał ich potrzebom edukacyjnym.'
             />
           </ListItem>
           <ListItem>
             <ListItemText
-              primary='Planner Availabilities'
-              secondary='Planners can set available times and resources to create efficient and balanced schedules.'
+              primary='Dostępność organizatorów'
+              secondary='Organizatorzy mogą określać dostępne terminy i zasoby, aby tworzyć efektywne i zrównoważone harmonogramy.'
             />
           </ListItem>
           <ListItem>
             <ListItemText
-              primary='Lecturer Insights'
-              secondary='Lecturers can see voting data for different days and courses to better align their teaching plans.'
+              primary='Wskazówki dla wykładowców'
+              secondary='Wykładowcy mogą przeglądać dane głosowania dotyczące różnych dni i kursów, aby lepiej dostosować swoje plany nauczania.'
             />
           </ListItem>
         </List>
 
         <Typography variant='h6' gutterBottom>
-          Why Smart Study?
+          Dlaczego Smart Study?
         </Typography>
         <Typography variant='body1' paragraph>
-          By using Smart Study, educational institutions can create study plans
-          that:
+          Korzystając z Smart Study, instytucje edukacyjne mogą tworzyć plany
+          zajęć, które:
         </Typography>
         <List>
           <ListItem>
             <ListItemText
-              primary='Enhance Collaboration'
-              secondary='Encourage input from all stakeholders to build a schedule that works for everyone.'
+              primary='Wspierają współpracę'
+              secondary='Zachęcają do udziału wszystkich zainteresowanych stron w tworzeniu harmonogramu, który odpowiada wszystkim.'
             />
           </ListItem>
           <ListItem>
             <ListItemText
-              primary='Save Time'
-              secondary='Automate complex scheduling tasks and reduce manual effort.'
+              primary='Oszczędzają czas'
+              secondary='Automatyzują skomplikowane zadania związane z tworzeniem harmonogramów i zmniejszają nakład pracy ręcznej.'
             />
           </ListItem>
           <ListItem>
             <ListItemText
-              primary='Promote Fairness'
-              secondary='Address the preferences of students and lecturers to create balanced schedules.'
+              primary='Promują sprawiedliwość'
+              secondary='Uwzględniają preferencje studentów i wykładowców, aby tworzyć zrównoważone harmonogramy.'
             />
           </ListItem>
         </List>
 
         <Typography variant='body1' paragraph>
-          Smart Study brings modern tools to educational planning, making the
-          process efficient, inclusive, and transparent.
+          Smart Study wprowadza nowoczesne narzędzia do planowania edukacyjnego,
+          czyniąc ten proces efektywnym, inkluzywnym i przejrzystym.
         </Typography>
       </Box>
       <Fireworks

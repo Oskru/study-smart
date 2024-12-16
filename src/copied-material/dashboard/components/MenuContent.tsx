@@ -14,16 +14,20 @@ import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import { useNavigate } from 'react-router-dom';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon />, url: '/' },
-  { text: 'Preferences', icon: <AnalyticsRoundedIcon />, url: '/preferences' },
+  { text: 'Strona główna', icon: <HomeRoundedIcon />, url: '/' },
+  { text: 'Preferencje', icon: <AnalyticsRoundedIcon />, url: '/preferences' },
   {
-    text: 'Availabilities',
+    text: 'Godziny dostępności',
     icon: <AnalyticsRoundedIcon />,
     url: '/availabilities',
   },
-  { text: 'Students', icon: <PeopleRoundedIcon />, url: '/students' },
-  { text: 'Planner', icon: <PeopleRoundedIcon />, url: '/planner' },
-  { text: 'Admin Panel', icon: <PeopleRoundedIcon />, url: '/admin-panel' },
+  { text: 'Studenci', icon: <PeopleRoundedIcon />, url: '/students' },
+  { text: 'Planowanie', icon: <PeopleRoundedIcon />, url: '/planner' },
+  {
+    text: 'Panel administratora',
+    icon: <PeopleRoundedIcon />,
+    url: '/admin-panel',
+  },
 ];
 
 const secondaryListItems = [

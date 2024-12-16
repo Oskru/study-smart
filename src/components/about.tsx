@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, List, ListItem, ListItemText } from '@mui/material';
 import AppContainer from './app-container';
+import { Fireworks } from '@fireworks-js/react';
 
 export const About: React.FC = () => {
   return (
@@ -73,6 +74,19 @@ export const About: React.FC = () => {
           process efficient, inclusive, and transparent.
         </Typography>
       </Box>
+      <Fireworks
+        options={{
+          hue: {
+            min: 0,
+            max: 0,
+          },
+        }}
+        style={{
+          position: 'absolute',
+          height: '100%',
+          width: '100%',
+        }}
+      />
     </AppContainer>
   );
 };

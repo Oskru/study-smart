@@ -13,12 +13,14 @@ export interface User {
 }
 
 const userRoles = ['STUDENT', 'LECTURER', 'PLANNER', 'ADMIN'] as const;
+const userRolesSchema = z.enum(userRoles);
+export type UserRole = z.infer<typeof userRolesSchema>;
 
 const tokenSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   id: z.number(),
-  userRole: z.enum(userRoles),
+  userRole: userRolesSchema,
   sub: z.string(),
   iat: z.number(),
   exp: z.number(),
